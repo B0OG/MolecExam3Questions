@@ -6,7 +6,7 @@ Minimal multiple-choice quiz site for Molecular Medicine Exam 3.
 
 1. Open the [master Google Sheet](https://docs.google.com/spreadsheets/d/13fqa2rBEcpVLRnJQvZAXbMMwyqkjz2NflTG3HeN15PI/edit).
 2. In Google Sheets choose **File → Share → Publish to web**. Select the **Questions** tab, select **Comma-separated values (.csv)** and click Publish. Copy the generated CSV URL.
-3. Send that CSV URL to ChatGPT to insert as the **DEFAULT_CSV_URL** in `index.html`. Do not rely on the website's browser-local “Save source” setting for classmates.
+3. The site's built-in Google Sheets CSV source has been configured in `index.html` (Nov 3, 2026). Refreshing the site loads the current published questions.
 4. On GitHub navigate to **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose **main** and **/(root)**, then save.
 5. Visit your Pages URL and verify questions and progress. Test appending a new question in Google Sheets.
 
@@ -22,4 +22,4 @@ Question types/categories are discovered from the Sheet automatically. Keep IDs 
 
 Progress is saved in browser localStorage, by question ID. Different browsers and devices do not automatically sync. Export a JSON backup before clearing browser data or changing devices. First-attempt accuracy is preserved through retries.
 
-The repository and published Sheet content are public. Six starter questions are embedded as a fallback until the published CSV source is configured.
+The repository and published Sheet content are public. Six starter questions are embedded as a clearly labeled fallback if loading the published CSV fails.
