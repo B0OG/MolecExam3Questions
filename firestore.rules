@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each signed-in student can read and write ONLY their own question progress.
+    match /users/{userId}/progress/{questionId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.data.keys().hasOnly(['attempts', 'bookmark', 'updatedAt'])
+                            && request.resource.data.attempts is list
+                            && request.resource.data.bookmark is bool
+                            && request.resource.data.updatedAt is timestamp;
+      allow delete: if false;
+    }
+  }
+}
