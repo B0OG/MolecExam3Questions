@@ -27,6 +27,12 @@ body.dark{color-scheme:dark;--bg:#111318;--panel:#1c2029;--text:#f3f5f8;--muted:
 .sidebar .side-divider{border-top:1px solid var(--border);margin:6px 0}
 .sidebar .open-builder{width:100%;margin:0 0 12px;font-weight:650}
 #quiz-label{font-size:.9rem;font-weight:650;color:var(--accent)}
+#recall-controls{margin:16px 0 24px}
+#recall-controls .primary{padding:11px 22px}
+.reference{padding:12px 16px;background:var(--bg);border-left:3px solid var(--accent);border-radius:5px;font-size:.91rem;line-height:1.55;margin:0 0 18px}
+.key-warning{color:var(--bad);font-weight:600;border-left:3px solid var(--bad);padding-left:12px;margin-top:12px}
+.sidebar .side-link:disabled{opacity:.48;cursor:default}
+.sidebar .side-link:disabled:hover{background:transparent}
 @media(max-width:760px){.app-shell{grid-template-columns:minmax(0,1fr)}.sidebar{position:static;max-height:none}.sidebar details{margin-top:0}}summary{cursor:pointer}code{font-size:.85em;overflow-wrap:anywhere}.hidden{display:none!important}@media(max-width:620px){h1{font-size:1.2rem}.stats{gap:6px}.panel{padding:13px}main{padding:13px 10px}.line button{flex:1}}
 
 .auth-indicator{font-size:.8rem;color:var(--muted)}
@@ -149,7 +155,16 @@ h2{font-size:1.2rem}
 <label class="toggle"><input id="shuffle-options" type="checkbox" checked> Shuffle answer choices</label>
 </div><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
 </section>
-<section id="quiz" class="panel"><div id="quiz-label" aria-live="polite"></div><div class="line" style="margin-top:8px"><button id="back">← Custom quiz</button><span id="position" class="push muted"></span><button id="bookmark">☆ Bookmark</button></div><div class="bar"><div id="progressbar"></div></div><small id="meta"></small><div id="prompt" class="question"></div><div id="choices"></div><div class="line"><button id="prev">Previous</button><button id="next">Next →</button><button id="retry" class="hidden">Retry question</button></div><div id="feedback" class="feedback hidden" aria-live="polite"></div></section>
+<section id="quiz" class="panel"><div id="quiz-label" aria-live="polite"></div><div class="line" style="margin-top:8px"><button id="back">← Custom quiz</button><span id="position" class="push muted"></span><button id="bookmark">☆ Bookmark</button></div><div class="bar"><div id="progressbar"></div></div><small id="meta"></small><div id="prompt" class="question"></div>
+<div id="reference" class="reference hidden"></div>
+<div id="choices"></div>
+<div id="recall-controls" class="hidden">
+  <button id="reveal" class="primary">Reveal answer</button>
+  <div id="recall-rating" class="line hidden" style="margin-top:12px">
+    <button id="self-correct" class="primary">I recalled correctly</button>
+    <button id="self-incorrect">I missed it</button>
+  </div>
+</div><div class="line"><button id="prev">Previous</button><button id="next">Next →</button><button id="retry" class="hidden">Retry question</button></div><div id="feedback" class="feedback hidden" aria-live="polite"></div></section>
 </div></div>
 <details class="panel"><summary><strong>Progress backup and question source</strong></summary>
 <div class="line" style="margin-top:12px"><button id="export">Export progress JSON</button><label style="cursor:pointer"><span style="display:inline-block;padding:9px;border:1px solid var(--border);border-radius:8px">Import progress JSON</span><input type="file" id="import" accept=".json,application/json" style="display:none"></label></div>
@@ -160,14 +175,7 @@ h2{font-size:1.2rem}
 </main>
 <script>
 "use strict";
-const SAMPLE=[
-{id:"MF1-INTRO-001",lecture:"Metabolic Fuels I",category:"Intro Questions",source:"AI-Generated",question:"Which fuel provides the greatest energy per gram?",A:"Carbohydrate",B:"Protein",C:"Fat",D:"Ethanol",E:"Glycogen",correct:"C",explanation:"Fat provides 9 kcal/g, versus 7 for ethanol and 4 for carbohydrates and proteins.",status:"active",version:"1"},
-{id:"MF1-INTRO-002",lecture:"Metabolic Fuels I",category:"Intro Questions",source:"AI-Generated",question:"Which two processes directly generate ATP in human metabolism?",A:"Oxidative phosphorylation and substrate-level phosphorylation",B:"Glycogenolysis and lipolysis",C:"Gluconeogenesis and glycogenesis",D:"Proteolysis and lipogenesis",E:"Ketogenesis and ketolysis",correct:"A",explanation:"ATP generation occurs by substrate-level phosphorylation and oxidative phosphorylation.",status:"active",version:"1"},
-{id:"MF2-INTRO-001",lecture:"Metabolic Fuels II",category:"Intro Questions",source:"AI-Generated",question:"Which tissues require insulin for major stimulation of glucose uptake in the fed state?",A:"Brain and erythrocytes",B:"Liver and brain",C:"Muscle and adipose tissue",D:"Erythrocytes and liver",E:"Brain and adipose tissue",correct:"C",explanation:"Muscle and adipose tissue use insulin-responsive glucose uptake; brain and RBC uptake is insulin-independent.",status:"active",version:"1"},
-{id:"MF2-INTRO-002",lecture:"Metabolic Fuels II",category:"Intro Questions",source:"AI-Generated",question:"During prolonged starvation, which fuel becomes increasingly important for the brain?",A:"Long-chain fatty acids",B:"Ketone bodies",C:"Stored muscle glycogen",D:"Circulating triglycerides",E:"Dietary chylomicrons",correct:"B",explanation:"Ketone bodies produced during starvation can be used by the brain, sparing glucose.",status:"active",version:"1"},
-{id:"MICRO-INTRO-001",lecture:"Human Microbiome",category:"Intro Questions",source:"AI-Generated",question:"What is bacterial antagonism by the normal flora?",A:"Suppression of normal flora by antibiotics",B:"Protection against pathogen colonization by resident organisms",C:"Conversion of all bacteria into pathogens",D:"Colonization restricted to sterile tissues",E:"Formation of bacterial endospores",correct:"B",explanation:"Resident normal flora can hinder colonization by pathogens, a beneficial effect called antagonism.",status:"active",version:"1"},
-{id:"BACT-INTRO-001",lecture:"Introduction to Bacteriology",category:"Intro Questions",source:"AI-Generated",question:"Which bacterial structure is directly involved in conjugation?",A:"Flagellar filament",B:"Capsule",C:"Sex pilus",D:"Endospore coat",E:"Peptidoglycan",correct:"C",explanation:"Sex pili facilitate conjugation, while somatic pili primarily help bacterial adhesion.",status:"active",version:"1"}
-];
+const SAMPLE=[];
 const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="molec-exam3-preferences-v1";
 const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv"; // Shared published question-bank CSV URL.
 let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set(),activeUid=null;
@@ -214,48 +222,48 @@ if(prefs.dark)document.body.classList.add("dark");
 $("theme").onclick=()=>{document.body.classList.toggle("dark");prefs.dark=document.body.classList.contains("dark");savePrefs()};
 for(const id of ["shuffle","shuffle-options","count","filter"]){if(prefs[id]!==undefined){$(id).type==="checkbox"?$(id).checked=prefs[id]:$(id).value=prefs[id]}$(id).addEventListener("change",()=>{prefs[id]=$(id).type==="checkbox"?$(id).checked:$(id).value;savePrefs();updateMatch()})}
 function parseCSV(text){const out=[];let row=[],cell="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===","&&!quoted){row.push(cell);cell=""}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&text[i+1]==="\n")i++;row.push(cell);if(row.some(x=>x!==""))out.push(row);row=[];cell=""}else cell+=c}if(cell!==""||row.length){row.push(cell);out.push(row)}const header=out.shift()?.map(x=>x.trim().replace(/^\uFEFF/,""))||[];return out.map(r=>Object.fromEntries(header.map((h,i)=>[h,(r[i]||"").trim()])))}
-function validate(list){const seen=new Set();return list.filter(q=>{const valid=q.id&&q.lecture&&q.category&&q.question&&["A","B","C","D","E"].includes((q.correct||"").toUpperCase())&&["A","B","C","D","E"].every(x=>q[x]);if(!valid||seen.has(q.id)||q.status==="inactive")return false;seen.add(q.id);return true}).map(q=>({...q,correct:q.correct.toUpperCase()}))}
+function validate(list){
+ const seen=new Set();
+ return list.map(q=>({...q,type:(q.type||"mcq").trim().toLowerCase(),correct:(q.correct||"").trim().toUpperCase()}))
+ .filter(q=>{
+   if(!q.id||!q.lecture||!q.category||!q.question||seen.has(q.id)||q.status==="inactive")return false;
+   const options=["A","B","C","D","E"].filter(k=>typeof q[k]==="string"&&q[k].trim());
+   if(q.type==="recall"&&!q.answer?.trim())return false;
+   if(q.type!=="recall"&&(q.type!=="mcq"||options.length<2||!options.includes(q.correct)))return false;
+   seen.add(q.id);return true;
+ });
+}
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const sourceUrl=()=>localStorage.getItem("molec-exam3-csv-url")||DEFAULT_CSV_URL;
-async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=SAMPLE,message="Starter questions loaded. Connect the published Google Sheet to enable automatic updates.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). Showing starter questions instead."}}questions=validate(data);$("notice").textContent=message;setupFilters();updateStats();buildSidebar()}
+async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="No questions loaded. Check the published Google Sheet connection.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}questions=validate(data);$("notice").textContent=message;setupFilters();updateStats();buildSidebar()}
 function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(),allCats=[...new Set(questions.map(q=>q.category))].sort();const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect,selectedLectures,"excludedLectures");drawChecks("categories",allCats,selectedCats,"excludedCats");updateMatch()}
 function drawChecks(id,items,set,key){const wrap=$(id);wrap.replaceChildren();items.forEach(x=>{const label=document.createElement("label"),input=document.createElement("input"),text=document.createElement("span");input.type="checkbox";input.checked=set.has(x);input.onchange=()=>{input.checked?set.add(x):set.delete(x);prefs[key]=items.filter(v=>!set.has(v));savePrefs();updateMatch()};text.textContent=x;label.append(input,text);wrap.append(label)})}
 function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!a.correct))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
 function updateMatch(){$("match").textContent=matches().length+" matching questions";$("start").disabled=!matches().length}
 function buildSidebar(){
  const nav=$("sidebar-list");nav.replaceChildren();
- const rawLectures=[...new Set(questions.map(q=>q.lecture))].sort((a,b)=>a.localeCompare(b));
- const fuelLectures=rawLectures.filter(name=>/^Metabolic Fuels(?:\s+[IVX]+)?$/i.test(name));
- const groupFuel=fuelLectures.length>1;
- const groups=rawLectures.filter(name=>!groupFuel||!fuelLectures.includes(name)).map(name=>({name,lectures:[name]}));
- if(groupFuel)groups.unshift({name:"Metabolic Fuels",lectures:fuelLectures});
- groups.forEach((group,i)=>{
-   const groupQuestions=questions.filter(q=>group.lectures.includes(q.lecture));
+ const defaultLectures=["Metabolic Fuels ILA","Human Microbiome","Introduction to Bacteriology","Clinical Bacteriology"];
+ const defaultTypes=["Bits Questions","USMLE AI Questions","Intro Questions","Faculty Questions"];
+ const names=[...new Set([...defaultLectures,...questions.map(q=>q.lecture)])];
+ names.forEach((name,i)=>{
+   const all=questions.filter(q=>q.lecture===name);
    const details=document.createElement("details");details.open=i===0;
    const summary=document.createElement("summary");
-   const name=document.createElement("span");name.textContent=group.name;
-   const count=document.createElement("span");count.className="side-count";count.textContent=groupQuestions.length;
-   summary.append(name,count);details.append(summary);
+   const title=document.createElement("span");title.textContent=name;
+   const count=document.createElement("span");count.className="side-count";count.textContent=all.length;
+   summary.append(title,count);details.append(summary);
    const items=document.createElement("div");items.className="side-items";
-   function addLink(label,questionSet,primary=false){
-      const btn=document.createElement("button");btn.type="button";btn.className="side-link"+(primary?" primary-link":"");
-      const title=document.createElement("span");title.textContent=label;
-      const qty=document.createElement("span");qty.className="side-count";qty.textContent=questionSet.length;
-      btn.append(title,qty);btn.disabled=!questionSet.length;
-      btn.onclick=()=>launchQuiz(questionSet,group.name+" — "+label,false);items.append(btn);
+   function link(text,list,primary=false){
+      const btn=document.createElement("button");btn.type="button";
+      btn.className="side-link"+(primary?" primary-link":"");
+      const caption=document.createElement("span");caption.textContent=text;
+      const qty=document.createElement("span");qty.className="side-count";qty.textContent=list.length;
+      btn.append(caption,qty);btn.disabled=list.length===0;
+      btn.onclick=()=>launchQuiz(list,name+" — "+text,false);
+      items.append(btn);
    }
-   addLink("All questions",groupQuestions,true);
-   const categories=[...new Set(groupQuestions.map(q=>q.category))].sort((a,b)=>a.localeCompare(b));
-   categories.forEach(cat=>addLink(cat,groupQuestions.filter(q=>q.category===cat)));
-   if(group.lectures.length>1){
-     const divider=document.createElement("div");divider.className="side-divider";items.append(divider);
-     group.lectures.forEach(lecture=>{
-       const section=document.createElement("div");section.className="sublecture";section.textContent=lecture;items.append(section);
-       const lectureQuestions=groupQuestions.filter(q=>q.lecture===lecture);
-       addLink("All "+lecture+" questions",lectureQuestions);
-       [...new Set(lectureQuestions.map(q=>q.category))].sort().forEach(cat=>addLink(cat,lectureQuestions.filter(q=>q.category===cat)));
-     });
-   }
+   link("All questions",all,true);
+   [...new Set([...defaultTypes,...all.map(q=>q.category)])].forEach(type=>link(type,all.filter(q=>q.category===type)));
    details.append(items);nav.append(details);
  });
 }
@@ -277,20 +285,93 @@ $("start").onclick=()=>launchQuiz(matches(),"Custom quiz",true);
 $("back").onclick=()=>{$("setup").style.display="block";$("quiz").style.display="none";updateMatch()};
 $("prev").onclick=()=>{if(idx>0){idx--;render()}};
 $("next").onclick=()=>{if(idx<session.length-1){idx++;render()}else{$("back").click()}};
-function render(){const q=session[idx];draft=null;orderedOptions=$("shuffle-options").checked?shuffle(["A","B","C","D","E"]):["A","B","C","D","E"];$("position").textContent=(idx+1)+" / "+session.length;$("meta").textContent=q.lecture+" • "+q.category+" • "+(q.source||"");$("prompt").textContent=q.question;$("bookmark").textContent=progress[q.id]?.bookmark?"★ Bookmarked":"☆ Bookmark";$("choices").replaceChildren();let attempted=progress[q.id]?.attempts?.length>0;orderedOptions.forEach((k,i)=>{const btn=document.createElement("button");btn.className="option";btn.textContent=String.fromCharCode(65+i)+". "+q[k];btn.dataset.key=k;btn.disabled=attempted;btn.onclick=()=>recordAnswer(q,k);$("choices").append(btn)});$("retry").classList.toggle("hidden",!attempted);$("feedback").classList.toggle("hidden",!attempted);if(attempted)showFeedback(q);$("prev").disabled=idx===0;$("next").textContent=idx===session.length-1?"Finish":"Next →";$("progressbar").style.width=((idx+1)/session.length*100)+"%"}
-function showFeedback(q){const rec=progress[q.id],last=rec.attempts[rec.attempts.length-1],right=last.correct;$("feedback").replaceChildren();const heading=document.createElement("strong");heading.className=right?"ok":"wrong";heading.textContent=right?"Correct":"Incorrect";const expl=document.createElement("p");expl.textContent="Correct answer: "+q[q.correct]+(q.explanation?" — "+q.explanation:"");$("feedback").append(heading,expl);document.querySelectorAll(".option").forEach(el=>{el.disabled=true;if(el.dataset.key===q.correct)el.classList.add("correct");else if(el.dataset.key===last.answer)el.classList.add("incorrect")})}
+function render(){
+ const q=session[idx];if(!q)return;
+ const recall=q.type==="recall",attempted=!!progress[q.id]?.attempts?.length;
+ draft=null;
+ $("position").textContent=(idx+1)+" / "+session.length;
+ $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
+ $("prompt").textContent=q.question;
+ $("bookmark").textContent=progress[q.id]?.bookmark?"★ Bookmarked":"☆ Bookmark";
+ $("reference").classList.toggle("hidden",!q.reference);
+ $("reference").textContent=q.reference||"";
+ $("choices").classList.toggle("hidden",recall);
+ $("recall-controls").classList.toggle("hidden",!recall);
+ $("recall-rating").classList.add("hidden");
+ $("reveal").classList.toggle("hidden",!recall||attempted);
+ $("choices").replaceChildren();
+ if(!recall){
+    const options=["A","B","C","D","E"].filter(k=>q[k]?.trim());
+    orderedOptions=$("shuffle-options").checked?shuffle(options):options;
+    orderedOptions.forEach((k,i)=>{
+       const btn=document.createElement("button");btn.className="option";
+       btn.textContent=String.fromCharCode(65+i)+". "+q[k];btn.dataset.key=k;btn.disabled=attempted;
+       btn.onclick=()=>recordAnswer(q,k);$("choices").append(btn);
+    });
+ }
+ $("retry").classList.toggle("hidden",!attempted);
+ $("feedback").classList.toggle("hidden",!attempted);
+ if(attempted)showFeedback(q);
+ $("prev").disabled=idx===0;
+ $("next").textContent=idx===session.length-1?"Finish":"Next →";
+ $("progressbar").style.width=((idx+1)/session.length*100)+"%";
+}
+function showFeedback(q){
+ const rec=progress[q.id],last=rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
+ const right=!!last.correct;
+ $("feedback").replaceChildren();
+ const heading=document.createElement("strong");heading.className=right?"ok":"wrong";
+ heading.textContent=recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect");
+ const expl=document.createElement("p");
+ expl.textContent=(recall?"Faculty answer: "+q.answer:"Correct answer: "+q[q.correct])+(q.explanation?" — "+q.explanation:"");
+ $("feedback").append(heading,expl);
+ if(q.faculty_key_note){
+  const warning=document.createElement("p");warning.className="key-warning";
+  warning.textContent="Answer key discrepancy: "+q.faculty_key_note;
+  $("feedback").append(warning);
+ }
+ if(recall){
+   $("reveal").classList.add("hidden");$("recall-rating").classList.add("hidden");
+ }else{
+   document.querySelectorAll("#choices .option").forEach(el=>{
+    el.disabled=true;
+    if(el.dataset.key===q.correct)el.classList.add("correct");
+    else if(el.dataset.key===last.answer)el.classList.add("incorrect");
+   });
+ }
+}
 function recordAnswer(q,answer){
- if(document.querySelectorAll(".option:disabled").length)return;
+ if(q.type==="mcq"&&document.querySelectorAll("#choices .option:disabled").length)return;
+ if(q.type==="recall"&&$("recall-rating").classList.contains("hidden"))return;
  const rec=progress[q.id]||{attempts:[],bookmark:false};
  rec.attempts=rec.attempts||[];
- rec.attempts.push({answer,correct:answer===q.correct,at:new Date().toISOString(),version:q.version||"1"});
- progress[q.id]=rec;
- save(q.id);updateStats();updateMatch();
- $("feedback").classList.remove("hidden");
- $("retry").classList.remove("hidden");
+ rec.attempts.push({answer,correct:q.type==="recall"?answer==="self_correct":answer===q.correct,at:new Date().toISOString(),version:q.version||"1"});
+ progress[q.id]=rec;save(q.id);updateStats();updateMatch();
+ $("feedback").classList.remove("hidden");$("retry").classList.remove("hidden");
  showFeedback(q);
 }
-$("retry").onclick=()=>{const q=session[idx];if(!q)return;draft=null;document.querySelectorAll(".option").forEach(x=>{x.disabled=false;x.classList.remove("selected","correct","incorrect")});$("feedback").classList.add("hidden");$("retry").classList.add("hidden")};
+$("reveal").onclick=()=>{
+ const q=session[idx];if(!q||q.type!=="recall")return;
+ $("reveal").classList.add("hidden");
+ $("feedback").replaceChildren();
+ const ans=document.createElement("p");ans.textContent="Faculty answer: "+q.answer;
+ $("feedback").append(ans);$("feedback").classList.remove("hidden");
+ $("recall-rating").classList.remove("hidden");
+};
+$("self-correct").onclick=()=>recordAnswer(session[idx],"self_correct");
+$("self-incorrect").onclick=()=>recordAnswer(session[idx],"self_incorrect");
+$("retry").onclick=()=>{
+ const q=session[idx];if(!q)return;
+ draft=null;
+ if(q.type==="recall"){
+   $("reveal").classList.remove("hidden");$("recall-rating").classList.add("hidden");
+ }else{
+   document.querySelectorAll("#choices .option").forEach(x=>{
+    x.disabled=false;x.classList.remove("selected","correct","incorrect")
+   });
+ }
+ $("feedback").classList.add("hidden");$("retry").classList.add("hidden");
+};
 $("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save(q.id);render()};
 $("export").onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,exported:new Date().toISOString(),progress},null,2)],{type:"application/json"}),link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="molec-exam3-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $("import").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.progress||typeof data.progress!=="object"||Array.isArray(data.progress))throw Error("Invalid backup");if(!confirm("Import this backup? Existing progress for matching questions will be replaced."))return;progress={...progress,...data.progress};save();updateStats();updateMatch();alert("Progress imported")}catch(err){alert("Could not import: "+err.message)}e.target.value=""};
