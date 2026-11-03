@@ -23,3 +23,18 @@ Question types/categories are discovered from the Sheet automatically. Keep IDs 
 Progress is saved in browser localStorage, by question ID. Different browsers and devices do not automatically sync. Export a JSON backup before clearing browser data or changing devices. First-attempt accuracy is preserved through retries.
 
 The repository and published Sheet content are public. Six starter questions are embedded as a clearly labeled fallback if loading the published CSV fails.
+
+## Student login (Firebase) — one-time setup
+
+This version supports **Sign in with Google** and **email/password**, with private cloud-saved question progress. It remains in guest mode until you connect a Firebase project.
+
+1. Go to https://console.firebase.google.com and create a **Firebase project** (Spark/free plan is fine for a small classroom study app).
+2. In **Project settings → Your apps**, register a **Web app**. Copy the `firebaseConfig` values (`apiKey`, `authDomain`, `projectId`, `appId`). These are public web configuration identifiers, **not** service-account secrets.
+3. In **Build → Authentication → Sign-in method**, enable **Google** and **Email/Password**.
+4. In **Authentication → Settings → Authorized domains**, add `b0og.github.io` (domain only, no `https://` or repository path). Modern Firebase projects may not automatically authorize GitHub Pages.
+5. In **Build → Firestore Database**, create a **Standard** database in **Native mode**. In the **Rules** tab, replace the defaults with the contents of the repository's [firestore.rules](./firestore.rules) file, then **Publish**. Do **not** leave permissive test-mode rules live.
+6. Give ChatGPT the Firebase **web app configuration object** (never a private key), or edit `firebase-config.js` in this repository and fill in the four values. After the next GitHub Pages deploy, students can sign in.
+
+**How saving works:** Each user gets separate cloud documents under `users/{uid}/progress/{questionId}`, with first-attempt history and bookmarks. The site retains the existing browser-local guest progress. The first time a user signs in from a browser containing guest answers, it offers to import *unmatched* guest records into their account; it does not silently mix students' answers. Import/export JSON remains available. Sign out returns to the current browser's guest records.
+
+**Important:** Logging in protects **individual progress**, not the question bank. Questions remain public in the published Google Sheet. The GitHub Pages frontend is still publicly viewable. Firebase must be configured and the Firestore rules published before cloud sync is operational.
