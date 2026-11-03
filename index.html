@@ -38,7 +38,7 @@ const SAMPLE=[
 {id:"BACT-INTRO-001",lecture:"Introduction to Bacteriology",category:"Intro Questions",source:"AI-Generated",question:"Which bacterial structure is directly involved in conjugation?",A:"Flagellar filament",B:"Capsule",C:"Sex pilus",D:"Endospore coat",E:"Peptidoglycan",correct:"C",explanation:"Sex pili facilitate conjugation, while somatic pili primarily help bacterial adhesion.",status:"active",version:"1"}
 ];
 const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="molec-exam3-preferences-v1";
-const DEFAULT_CSV_URL=""; // Set to published Google Sheets CSV URL when publishing.
+const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv"; // Shared published question-bank CSV URL.
 let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set();
 try{progress=JSON.parse(localStorage.getItem(STORE)||"{}");prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{}
 function save(){localStorage.setItem(STORE,JSON.stringify(progress))}
