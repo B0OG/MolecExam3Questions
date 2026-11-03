@@ -240,7 +240,13 @@ const sourceUrl=()=>localStorage.getItem("molec-exam3-csv-url")||DEFAULT_CSV_URL
 async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="No questions loaded. Check the published Google Sheet connection.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}questions=validate(data);$("notice").textContent=message;setupFilters();updateStats();buildSidebar()}
 function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(),allCats=[...new Set(questions.map(q=>q.category))].sort();const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect,selectedLectures,"excludedLectures");drawChecks("categories",allCats,selectedCats,"excludedCats");updateMatch()}
 function drawChecks(id,items,set,key){const wrap=$(id);wrap.replaceChildren();items.forEach(x=>{const label=document.createElement("label"),input=document.createElement("input"),text=document.createElement("span");input.type="checkbox";input.checked=set.has(x);input.onchange=()=>{input.checked?set.add(x):set.delete(x);prefs[key]=items.filter(v=>!set.has(v));savePrefs();updateMatch()};text.textContent=x;label.append(input,text);wrap.append(label)})}
-function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!a.correct))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
+// Grade MCQ responses against the latest answer key, not a cached Boolean from an older key.
+function answerIsCorrect(q,attempt){
+ if(!attempt)return false;
+ if(q.type==="mcq" && /^[A-E]$/i.test(String(attempt.answer||""))) return String(attempt.answer).toUpperCase()===q.correct;
+ return !!attempt.correct;
+}
+function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!answerIsCorrect(q,a)))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
 function updateMatch(){$("match").textContent=matches().length+" matching questions";$("start").disabled=!matches().length}
 function buildSidebar(){
  const nav=$("sidebar-list");nav.replaceChildren();
@@ -278,7 +284,7 @@ function launchQuiz(list,label,applyCount){
  render();$("quiz").scrollIntoView({block:"start",behavior:"smooth"});
 }
 $("open-builder").onclick=()=>{$("setup").style.display="block";$("quiz").style.display="none";updateMatch();$("setup").scrollIntoView({block:"start",behavior:"smooth"})};
-function updateStats(){const total=questions.length,attempted=questions.filter(q=>progress[q.id]?.attempts?.length),correct=attempted.filter(q=>progress[q.id].attempts[0].correct).length;$("total").textContent=total;$("completed").textContent=attempted.length;$("accuracy").textContent=attempted.length?Math.round(correct/attempted.length*100)+"%":"—"}
+function updateStats(){const total=questions.length,attempted=questions.filter(q=>progress[q.id]?.attempts?.length),correct=attempted.filter(q=>answerIsCorrect(q,progress[q.id].attempts[0])).length;$("total").textContent=total;$("completed").textContent=attempted.length;$("accuracy").textContent=attempted.length?Math.round(correct/attempted.length*100)+"%":"—"}
 $("lect-all").onclick=()=>{selectedLectures=new Set(questions.map(q=>q.lecture));prefs.excludedLectures=[];savePrefs();setupFilters()};
 $("lect-none").onclick=()=>{selectedLectures.clear();prefs.excludedLectures=[...new Set(questions.map(q=>q.lecture))];savePrefs();setupFilters()};
 $("cat-all").onclick=()=>{selectedCats=new Set(questions.map(q=>q.category));prefs.excludedCats=[];savePrefs();setupFilters()};
@@ -320,7 +326,7 @@ function render(){
 }
 function showFeedback(q){
  const rec=progress[q.id],last=rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
- const right=!!last.correct;
+ const right=answerIsCorrect(q,last);
  $("feedback").replaceChildren();
  const heading=document.createElement("strong");heading.className=right?"ok":"wrong";
  heading.textContent=recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect");
