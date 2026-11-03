@@ -90,7 +90,7 @@ function updateMatch(){$("match").textContent=matches().length+" matching questi
 function buildSidebar(){
  const nav=$("sidebar-list");nav.replaceChildren();
  const rawLectures=[...new Set(questions.map(q=>q.lecture))].sort((a,b)=>a.localeCompare(b));
- const fuelLectures=rawLectures.filter(name=>/^Metabolic Fuels(?:\\s+[IVX]+)?$/i.test(name));
+ const fuelLectures=rawLectures.filter(name=>/^Metabolic Fuels(?:\s+[IVX]+)?$/i.test(name));
  const groupFuel=fuelLectures.length>1;
  const groups=rawLectures.filter(name=>!groupFuel||!fuelLectures.includes(name)).map(name=>({name,lectures:[name]}));
  if(groupFuel)groups.unshift({name:"Metabolic Fuels",lectures:fuelLectures});
