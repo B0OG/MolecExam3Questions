@@ -28,8 +28,32 @@ body.dark{color-scheme:dark;--bg:#111318;--panel:#1c2029;--text:#f3f5f8;--muted:
 .sidebar .open-builder{width:100%;margin:0 0 12px;font-weight:650}
 #quiz-label{font-size:.9rem;font-weight:650;color:var(--accent)}
 @media(max-width:760px){.app-shell{grid-template-columns:minmax(0,1fr)}.sidebar{position:static;max-height:none}.sidebar details{margin-top:0}}summary{cursor:pointer}code{font-size:.85em;overflow-wrap:anywhere}.hidden{display:none!important}@media(max-width:620px){h1{font-size:1.2rem}.stats{gap:6px}.panel{padding:13px}main{padding:13px 10px}.line button{flex:1}}
+
+.auth-indicator{font-size:.8rem;color:var(--muted)}
+.auth-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:end}
+.auth-dialog{border:1px solid var(--border);border-radius:12px;background:var(--panel);color:var(--text);width:min(440px,calc(100vw - 24px));padding:22px;box-shadow:0 12px 50px #0005}
+.auth-dialog::backdrop{background:#0008}
+.auth-dialog h2{margin:0 0 8px}
+.auth-dialog .field{margin:12px 0}
+.auth-dialog button{white-space:normal}
+.auth-dialog .auth-buttons{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}
+.auth-dialog .auth-buttons button{flex:1}
+.auth-alert{font-size:.85rem;color:var(--muted);min-height:1.3em;margin:8px 0}
+@media(max-width:620px){.auth-indicator{display:none}}
 </style></head><body><main>
-<header><h1>MolecExam3 Questions</h1><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></header>
+<header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
+<dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
+<div class="line"><h2 id="auth-heading">Sign in</h2><button id="close-auth" type="button" class="push" aria-label="Close sign-in">✕</button></div>
+<p class="muted">Save your question progress privately and sync it across devices. Guest mode remains available.</p>
+<div id="auth-alert" class="auth-alert" role="status" aria-live="polite"></div>
+<form id="auth-form" autocomplete="on">
+<label class="field">Email<input id="auth-email" type="email" autocomplete="email" required></label>
+<label class="field">Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" required></label>
+<div class="auth-buttons"><button class="primary" id="sign-in-email" type="submit">Sign in</button><button id="sign-up-email" type="button">Create account</button></div>
+</form>
+<div class="auth-buttons"><button id="sign-in-google" type="button">Continue with Google</button><button id="reset-password" type="button">Reset password</button></div>
+<div class="auth-buttons"><button id="sign-out" type="button" class="hidden">Sign out</button></div>
+</dialog>
 <div class="stats" aria-live="polite"><div class="stat"><strong id="total">0</strong><span>Questions</span></div><div class="stat"><strong id="completed">0</strong><span>Completed</span></div><div class="stat"><strong id="accuracy">—</strong><span>First-try accuracy</span></div></div>
 <div id="notice" class="panel">Loading questions…</div>
 <div class="app-shell">
@@ -71,9 +95,45 @@ const SAMPLE=[
 ];
 const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="molec-exam3-preferences-v1";
 const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv"; // Shared published question-bank CSV URL.
-let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set();
-try{progress=JSON.parse(localStorage.getItem(STORE)||"{}");prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{}
-function save(){localStorage.setItem(STORE,JSON.stringify(progress))}
+let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set(),activeUid=null;
+function readProgress(key){try{const obj=JSON.parse(localStorage.getItem(key)||"{}");return obj&&typeof obj==="object"&&!Array.isArray(obj)?obj:{}}catch{return {}}}
+function progressKey(){return activeUid?STORE+":user:"+activeUid:STORE}
+try{progress=readProgress(STORE);prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{progress=readProgress(STORE)}
+function save(questionId){
+ localStorage.setItem(progressKey(),JSON.stringify(progress));
+ if(activeUid&&window.ExamAuth?.saveChanges){
+  const changes=questionId?{[questionId]:progress[questionId]}:progress;
+  window.ExamAuth.saveChanges(changes).catch(e=>window.ExamAuth.showSyncError?.(e));
+ }
+}
+function showAccountStatus(message){$("account-status").textContent=message}
+window.ExamQuiz={
+ async onSignIn(uid,cloudProgress){
+  const localAccount=readProgress(STORE+":user:"+uid);
+  const guest=readProgress(STORE);
+  // The cloud is authoritative for any record it already contains.
+  const merged={...localAccount,...cloudProgress};
+  const missing={};
+  for(const [id,record] of Object.entries(localAccount)){
+    if(!(id in cloudProgress)){missing[id]=record}
+  }
+  const guestUnmerged=Object.keys(guest).filter(id=>!(id in merged));
+  if(guestUnmerged.length&&confirm("Import "+guestUnmerged.length+" guest question record(s) from this browser into your account? Choose Cancel if these belong to someone else.")){
+    for(const id of guestUnmerged){merged[id]=guest[id];missing[id]=guest[id]}
+  }
+  activeUid=uid;progress=merged;
+  localStorage.setItem(progressKey(),JSON.stringify(progress));
+  updateStats();updateMatch();
+  if($("quiz").style.display==="block"&&session[idx])render();
+  if(Object.keys(missing).length)await window.ExamAuth.saveChanges(missing);
+ },
+ onSignOut(){
+  activeUid=null;progress=readProgress(STORE);
+  updateStats();updateMatch();
+  if($("quiz").style.display==="block"&&session[idx])render();
+ },
+ showAccountStatus
+};
 function savePrefs(){localStorage.setItem(PREF,JSON.stringify(prefs))}
 if(prefs.dark)document.body.classList.add("dark");
 $("theme").onclick=()=>{document.body.classList.toggle("dark");prefs.dark=document.body.classList.contains("dark");savePrefs()};
@@ -150,17 +210,19 @@ function recordAnswer(q,answer){
  rec.attempts=rec.attempts||[];
  rec.attempts.push({answer,correct:answer===q.correct,at:new Date().toISOString(),version:q.version||"1"});
  progress[q.id]=rec;
- save();updateStats();updateMatch();
+ save(q.id);updateStats();updateMatch();
  $("feedback").classList.remove("hidden");
  $("retry").classList.remove("hidden");
  showFeedback(q);
 }
 $("retry").onclick=()=>{const q=session[idx];if(!q)return;draft=null;document.querySelectorAll(".option").forEach(x=>{x.disabled=false;x.classList.remove("selected","correct","incorrect")});$("feedback").classList.add("hidden");$("retry").classList.add("hidden")};
-$("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save();render()};
+$("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save(q.id);render()};
 $("export").onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,exported:new Date().toISOString(),progress},null,2)],{type:"application/json"}),link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="molec-exam3-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $("import").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.progress||typeof data.progress!=="object"||Array.isArray(data.progress))throw Error("Invalid backup");if(!confirm("Import this backup? Existing progress for matching questions will be replaced."))return;progress={...progress,...data.progress};save();updateStats();updateMatch();alert("Progress imported")}catch(err){alert("Could not import: "+err.message)}e.target.value=""};
 $("saveurl").onclick=()=>{const val=$("sheeturl").value.trim();if(val){try{const u=new URL(val);if(u.protocol!=="https:")throw Error()}catch{alert("Enter a valid HTTPS CSV URL");return}}localStorage.setItem("molec-exam3-csv-url",val);load()};
 $("clearurl").onclick=()=>{localStorage.removeItem("molec-exam3-csv-url");load()};
 $("refresh").onclick=load;
 load();
-</script></body></html>
+</script>
+<script type="module" src="./auth.js"></script>
+</body></html>
