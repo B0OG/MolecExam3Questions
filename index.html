@@ -2,8 +2,8 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MolecExam3 Questions</title>
 <style>
-:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--text:#171b24;--muted:#637083;--border:#dce0e7;--accent:#bf253b;--soft:#fff0f2;--good:#146f4a;--bad:#b42336}
-body.dark{color-scheme:dark;--bg:#111318;--panel:#1c2029;--text:#f3f5f8;--muted:#a9b1bf;--border:#343946;--accent:#f16b7b;--soft:#342029;--good:#71d7a7;--bad:#ff8594}
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--text:#171b24;--muted:#637083;--border:#dce0e7;--accent:#2563eb;--soft:#eff6ff;--good:#146f4a;--bad:#b42336}
+body.dark{color-scheme:dark;--bg:#111318;--panel:#1c2029;--text:#f3f5f8;--muted:#a9b1bf;--border:#343946;--accent:#60a5fa;--soft:#1e3352;--good:#71d7a7;--bad:#ff8594}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:1000px;margin:auto;padding:22px 16px 60px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}h1{font-size:1.5rem;margin:0}h2{font-size:1.07rem;margin:0 0 14px}p{margin:6px 0}small,.muted{color:var(--muted)}.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:12px 0}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center}.stat strong{display:block;font-size:1.25rem}.stat span{font-size:.8rem;color:var(--muted)}button,input,select{font:inherit}button{cursor:pointer;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text)}button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}button:hover:not(:disabled){border-color:var(--accent)}.line{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.push{margin-left:auto}.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:7px}.checks label{padding:8px;border:1px solid var(--border);border-radius:7px;display:flex;gap:8px;align-items:center;cursor:pointer}.checks input{accent-color:var(--accent)}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:6px}.field select,.field input{width:100%;border:1px solid var(--border);border-radius:7px;padding:8px;background:var(--panel);color:var(--text)}.toggle{display:flex;align-items:center;gap:7px}.toggle input{accent-color:var(--accent)}.option{display:block;width:100%;text-align:left;padding:13px 14px;margin:8px 0;border:1px solid var(--border);border-radius:8px;background:var(--panel);color:var(--text)}.option.selected{border-color:var(--accent);background:var(--soft)}.option.correct{border-color:var(--good)}.option.incorrect{border-color:var(--bad)}.option:disabled{opacity:1;cursor:default}.question{font-size:1.12rem;font-weight:600;line-height:1.55;margin:15px 0}.feedback{padding:12px;border:1px solid var(--border);border-radius:8px;margin-top:12px}.ok{color:var(--good)}.wrong{color:var(--bad)}.bar{height:7px;border-radius:10px;background:var(--border);overflow:hidden;margin:12px 0}.bar>div{height:100%;background:var(--accent)}#quiz{display:none}#empty,#notice{color:var(--muted)}details{margin-top:18px}
 .app-shell{display:grid;grid-template-columns:minmax(210px,255px) minmax(0,1fr);gap:14px;align-items:start;margin-top:12px}
 .app-shell .panel{margin:0 0 12px}
@@ -228,8 +228,10 @@ function validate(list){
  .filter(q=>{
    if(!q.id||!q.lecture||!q.category||!q.question||seen.has(q.id)||q.status==="inactive")return false;
    const options=["A","B","C","D","E"].filter(k=>typeof q[k]==="string"&&q[k].trim());
-   if(q.type==="recall"&&!q.answer?.trim())return false;
-   if(q.type!=="recall"&&(q.type!=="mcq"||options.length<2||!options.includes(q.correct)))return false;
+   // Exclude fill-in-the-blank, recall, and free-response questions. The quiz is MCQ-only.
+   if(q.type!=="mcq"||options.length<2||!options.includes(q.correct))return false;
+   if(/fill[\s-]*in[\s-]*the[\s-]*blank|free[\s-]*response|recall/i.test(q.category||""))return false;
+   if(/_{3,}/.test(q.question))return false;
    seen.add(q.id);return true;
  });
 }
