@@ -442,6 +442,21 @@ function render(){
  $("question-status").textContent=attempted?"Answered — review the explanation or retry.":"Select an answer to view feedback.";
  renderToc();requestAnimationFrame(fitQuestion);
 }
+// Answer keys in the Sheet use source A–E positions, but shuffle changes their displayed labels.
+function displayedLetter(q,sourceLetter){
+ const order=sessionOptionOrders.get(q.id)||["A","B","C","D","E"].filter(letter=>q[letter]?.trim());
+ const index=order.indexOf(String(sourceLetter).toUpperCase());
+ return index<0?String(sourceLetter).toUpperCase():String.fromCharCode(65+index);
+}
+// Re-map explicit answer-letter references in explanations and faculty notes.
+// Avoid indiscriminately replacing A–E: 'A' can also be an English article.
+function displayAwareExplanation(text,q){
+ return String(text||"")
+  .replace(/\b((?:correct\s+)?(?:answer|choice|option|key)(?:\s+is|\s+was)?\s*[:=]?\s*)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\b((?:selects|lists|says|supports|marks)\s+)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\b((?:2026V\d+|V\d+)\s*:\s*)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\(([A-E])\)/g,(_,letter)=>"("+displayedLetter(q,letter)+")");
+}
 function showFeedback(q){
  const rec=progress[q.id],last=repeatAnsweredInSession?sessionAnswers.get(q.id):rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
  const right=answerIsCorrect(q,last);
@@ -452,11 +467,12 @@ function showFeedback(q){
  const heading=document.createElement("strong");heading.className=right?"ok":"wrong";
  heading.textContent=recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect");
  const expl=document.createElement("p");
- expl.textContent=(recall?"Faculty answer: "+q.answer:"Correct answer: "+q[q.correct])+(q.explanation?" — "+q.explanation:"");
+ const visibleAnswer=recall?"Faculty answer: "+q.answer:"Correct answer: "+displayedLetter(q,q.correct)+". "+q[q.correct];
+ expl.textContent=visibleAnswer+(q.explanation?" — "+displayAwareExplanation(q.explanation,q):"");
  $("feedback").append(heading,expl);
  if(q.faculty_key_note){
   const warning=document.createElement("p");warning.className="key-warning";
-  warning.textContent="Answer key discrepancy: "+q.faculty_key_note;
+  warning.textContent="Answer key discrepancy: "+displayAwareExplanation(q.faculty_key_note,q);
   $("feedback").append(warning);
  }
  if(recall){
