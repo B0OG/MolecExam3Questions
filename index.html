@@ -412,9 +412,10 @@ function renderToc(){
  session.forEach((q,i)=>{
   const btn=document.createElement("button"),p=progress[q.id];
   btn.type="button";btn.textContent=String(i+1);
-  btn.title="Question "+(i+1)+(p?.bookmark?" (flagged)":"")+(p?.attempts?.length?" (answered)":"");
+  const isAnswered=examMode&&!examSubmitted?examDrafts.has(q.id):(repeatAnsweredInSession?sessionAnswers.has(q.id):!!p?.attempts?.length);
+  btn.title="Question "+(i+1)+(p?.bookmark?" (flagged)":"")+(isAnswered?" (answered)":"");
   if(i===idx){btn.classList.add("active");btn.setAttribute("aria-current","step")}
-  if(examMode&&!examSubmitted?examDrafts.has(q.id):(repeatAnsweredInSession?sessionAnswers.has(q.id):!!p?.attempts?.length))btn.classList.add("answered");
+  if(isAnswered)btn.classList.add("answered");
   if(p?.bookmark)btn.classList.add("flagged");
   btn.onclick=()=>{idx=i;render()};nav.append(btn);
  });
@@ -573,7 +574,7 @@ $("exam-home").onclick=()=>{examSubmitted=true;document.body.classList.remove("e
 function render(){
  const q=session[idx];if(!q)return;
  const recall=q.type==="recall";
- const attempted=examMode?!examSubmitted&&false:(studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length));
+ const attempted=examMode?false:(studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length));
  // In exam mode no previous or current results are shown before final submission.
  const pending=examMode?examDrafts.get(q.id):studyDrafts.get(q.id);
  draft=pending||null;
