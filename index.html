@@ -231,6 +231,20 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
     pointer-events:none;
   }
 }
+
+/* Johnny Appleseed appears beneath Manny; no changes to existing layout. */
+@media(min-width:1320px){
+  #home-view::before{
+    content:"";
+    position:absolute;
+    left:calc(100% + 22px);
+    top:370px;
+    width:250px;
+    height:313px;
+    background:url("assets/johnny-appleseed.jpg") center/contain no-repeat;
+    pointer-events:none;
+  }
+}
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
