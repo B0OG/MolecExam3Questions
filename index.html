@@ -202,6 +202,20 @@ body.dark #quiz mark.quiz-mark{background:#e6c155;color:#1d1d20}
 #clear-highlights{font-size:.76rem;min-width:0}
 @media(max-width:570px){.exam-toolbar{flex-wrap:wrap}.exam-toolbar .exam-title{order:0;flex-basis:100%;max-width:none}.exam-toolbar #back{order:1}.exam-toolbar #highlight-toggle{order:2}.exam-toolbar #clear-highlights{order:3}.exam-toolbar #bookmark{order:4}}
 
+
+/* Submit-per-question study mode and deferred-grading exam mode. */
+#quiz .option.selected:not(:disabled){background:var(--soft);border:2px solid var(--accent);box-shadow:inset 3px 0 var(--accent);font-weight:650}
+#setup .exam-type-field{grid-column:1/-1;max-width:520px}
+#setup .exam-type-field select{font-weight:650}
+body.exam-review-mode #quiz.panel,body.exam-result-mode #quiz.panel{display:none!important}
+body.exam-review-mode #quiz-sidebar.sidebar,body.exam-result-mode #quiz-sidebar.sidebar{display:none}
+body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-shell{grid-template-columns:minmax(0,1fr)}
+.exam-finish-panel{background:var(--canvas);border:1px solid var(--chrome-border);border-radius:11px;max-width:760px;margin:clamp(10px,6vh,60px) auto;padding:clamp(20px,4vw,44px);font-size:1rem}
+.exam-finish-panel h2{font-size:1.45rem;margin-bottom:15px}
+.exam-finish-panel .line{margin-top:26px}
+.exam-score{font-size:clamp(2.8rem,6vw,5rem);font-weight:800;color:var(--accent);line-height:1.15;margin:16px 0}
+@media(max-width:570px){.exam-footer .line{gap:5px}.exam-footer button{font-size:.73rem;padding:7px}.exam-finish-panel{padding:18px}}
+
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
@@ -245,7 +259,13 @@ body.dark #quiz mark.quiz-mark{background:#e6c155;color:#1d1d20}
 <label class="toggle"><input id="shuffle" type="checkbox" checked> Shuffle questions</label>
 <label class="toggle"><input id="shuffle-options" type="checkbox" checked> Shuffle answer choices</label>
 <label class="toggle repeat-option"><input id="repeat-answered" type="checkbox"> Repeat answered questions as new</label>
-</div><p class="muted repeat-note">When enabled, previously answered questions start blank, with no previous answer or explanation shown. Your earlier attempts and first-try accuracy remain saved.</p><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
+<label class="field exam-type-field">Quiz format
+ <select id="quiz-format">
+  <option value="study">Study mode — submit each answer</option>
+  <option value="exam">Exam mode — submit everything at the end</option>
+ </select>
+</label>
+</div><p class="muted repeat-note">Study mode: choose an option, then press Submit answer to see feedback. Exam mode: all questions appear new, answers and explanations remain hidden, and you receive a score only after submitting the entire exam. Your previous attempts and first-try accuracy stay saved.</p><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
 </section>
 <section id="quiz" class="panel">
 <div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="highlight-toggle" type="button" title="Highlight text in the question by selecting it" aria-pressed="false">🖍 Highlight</button><button id="clear-highlights" class="hidden" type="button" title="Clear highlights on this question">Clear</button><button id="bookmark" type="button">☆ Flag</button></div>
@@ -254,7 +274,17 @@ body.dark #quiz mark.quiz-mark{background:#e6c155;color:#1d1d20}
 <div id="reference" class="reference hidden"></div><div id="choices"></div>
 <div id="recall-controls" class="hidden"><button id="reveal" type="button">Reveal answer</button><div id="recall-rating" class="line hidden"><button id="self-correct" type="button">I recalled correctly</button><button id="self-incorrect" type="button">I missed it</button></div></div>
 <div id="feedback" class="feedback hidden" aria-live="polite"></div></div>
-<div class="exam-footer"><span id="question-status" class="muted">Select an answer to view feedback.</span><div class="line"><button id="retry" class="hidden" type="button">Retry</button><button id="prev" type="button">Previous</button><button id="next" type="button" class="primary">Next →</button></div></div>
+<div class="exam-footer"><span id="question-status" class="muted">Select an answer to view feedback.</span><div class="line"><button id="retry" class="hidden" type="button">Retry</button><button id="prev" type="button">Previous</button><button id="submit-answer" type="button" class="primary" disabled>Submit answer</button><button id="next" type="button">Next →</button></div></div>
+</section>
+<section id="exam-review" class="exam-finish-panel hidden" aria-labelledby="exam-review-title">
+ <h2 id="exam-review-title">Review and submit exam</h2>
+ <p id="exam-review-summary"></p>
+ <p class="muted">After submission, your score will be calculated and your answers will be saved. You cannot change your exam answers after submitting.</p>
+ <div class="line"><button id="exam-return" type="button">← Back to questions</button><button id="exam-submit-all" class="primary" type="button">Submit entire exam</button></div>
+</section>
+<section id="exam-results" class="exam-finish-panel hidden" aria-labelledby="exam-results-title">
+ <h2 id="exam-results-title">Exam complete</h2><div class="exam-score" id="exam-score"></div><p id="exam-score-details" class="muted"></p>
+ <button id="exam-home" class="primary" type="button">Back to homepage</button>
 </section>
 </div></div>
 <details class="panel" id="admin-details"><summary><strong>Progress backup and question source</strong></summary>
@@ -273,6 +303,8 @@ let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions
 let repeatAnsweredInSession=false;
 const sessionAnswers=new Map(),sessionOptionOrders=new Map(),sessionCrossouts=new Map(),sessionHighlights=new Map();
 let highlighterActive=false;
+let examMode=false,examSubmitted=false;
+const studyDrafts=new Map(),examDrafts=new Map(),studyRetrying=new Set();
 function readProgress(key){try{const obj=JSON.parse(localStorage.getItem(key)||"{}");return obj&&typeof obj==="object"&&!Array.isArray(obj)?obj:{}}catch{return {}}}
 function progressKey(){return activeUid?STORE+":user:"+activeUid:STORE}
 try{progress=readProgress(STORE);prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{progress=readProgress(STORE)}
@@ -314,7 +346,7 @@ window.ExamQuiz={
 function savePrefs(){localStorage.setItem(PREF,JSON.stringify(prefs))}
 if(prefs.dark)document.body.classList.add("dark");
 $("theme").onclick=()=>{document.body.classList.toggle("dark");prefs.dark=document.body.classList.contains("dark");savePrefs()};
-for(const id of ["shuffle","shuffle-options","repeat-answered","count","filter"]){if(prefs[id]!==undefined){$(id).type==="checkbox"?$(id).checked=prefs[id]:$(id).value=prefs[id]}$(id).addEventListener("change",()=>{prefs[id]=$(id).type==="checkbox"?$(id).checked:$(id).value;savePrefs();updateMatch()})}
+for(const id of ["shuffle","shuffle-options","repeat-answered","quiz-format","count","filter"]){if(prefs[id]!==undefined){$(id).type==="checkbox"?$(id).checked=prefs[id]:$(id).value=prefs[id]}$(id).addEventListener("change",()=>{prefs[id]=$(id).type==="checkbox"?$(id).checked:$(id).value;savePrefs();updateMatch()})}
 function parseCSV(text){const out=[];let row=[],cell="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===","&&!quoted){row.push(cell);cell=""}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&text[i+1]==="\n")i++;row.push(cell);if(row.some(x=>x!==""))out.push(row);row=[];cell=""}else cell+=c}if(cell!==""||row.length){row.push(cell);out.push(row)}const header=out.shift()?.map(x=>x.trim().replace(/^\uFEFF/,""))||[];return out.map(r=>Object.fromEntries(header.map((h,i)=>[h,(r[i]||"").trim()])))}
 function validate(list){
  const seen=new Set();
@@ -382,7 +414,7 @@ function renderToc(){
   btn.type="button";btn.textContent=String(i+1);
   btn.title="Question "+(i+1)+(p?.bookmark?" (flagged)":"")+(p?.attempts?.length?" (answered)":"");
   if(i===idx){btn.classList.add("active");btn.setAttribute("aria-current","step")}
-  if(repeatAnsweredInSession?sessionAnswers.has(q.id):!!p?.attempts?.length)btn.classList.add("answered");
+  if(examMode&&!examSubmitted?examDrafts.has(q.id):(repeatAnsweredInSession?sessionAnswers.has(q.id):!!p?.attempts?.length))btn.classList.add("answered");
   if(p?.bookmark)btn.classList.add("flagged");
   btn.onclick=()=>{idx=i;render()};nav.append(btn);
  });
@@ -400,15 +432,22 @@ function launchQuiz(list,label,applyCount,origin="home"){
  session=$("shuffle").checked?shuffle(list):[...list];
  if(applyCount){const n=parseInt($("count").value,10);if(Number.isFinite(n))session=session.slice(0,n)}
  idx=0;returnView=origin;$("quiz-label").textContent=label;
- repeatAnsweredInSession=origin==="builder"&&$("repeat-answered").checked;
- sessionAnswers.clear();sessionOptionOrders.clear();sessionCrossouts.clear();sessionHighlights.clear();
+ examMode=origin==="builder"&&$("quiz-format").value==="exam";
+ examSubmitted=false;
+ repeatAnsweredInSession=origin==="builder"&&($("repeat-answered").checked||examMode);
+ sessionAnswers.clear();sessionOptionOrders.clear();sessionCrossouts.clear();sessionHighlights.clear();studyDrafts.clear();examDrafts.clear();studyRetrying.clear();
  highlighterActive=false;updateHighlightButton();
- document.body.classList.remove("builder-mode");document.body.classList.add("quiz-mode");
+ document.body.classList.remove("builder-mode","exam-review-mode","exam-result-mode");document.body.classList.add("quiz-mode");
  $("home-view").classList.add("hidden");$("app-shell").classList.remove("hidden");
  $("admin-details").classList.add("hidden");$("setup").style.display="none";$("quiz").style.display="block";
+ $("exam-review").classList.add("hidden");$("exam-results").classList.add("hidden");
  render();
 }
-function backToOrigin(){if(returnView==="builder")showBuilder();else showHome()}
+function backToOrigin(){
+ if(examMode&&!examSubmitted&&examDrafts.size>0&&!confirm("Leave this exam? Your unsubmitted answers will be lost."))return;
+ document.body.classList.remove("exam-review-mode","exam-result-mode");
+ if(returnView==="builder")showBuilder();else showHome();
+}
 $("home-builder").onclick=showBuilder;
 $("builder-back").onclick=showHome;
 
@@ -420,7 +459,11 @@ $("cat-none").onclick=()=>{selectedCats.clear();prefs.excludedCats=[...new Set(q
 $("start").onclick=()=>launchQuiz(matches(),"Custom quiz",true,"builder");
 $("back").onclick=backToOrigin;
 $("prev").onclick=()=>{if(idx>0){idx--;render()}};
-$("next").onclick=()=>{if(idx<session.length-1){idx++;render()}else backToOrigin()};
+$("next").onclick=()=>{
+ if(idx<session.length-1){idx++;render()}
+ else if(examMode&&!examSubmitted)showExamReview();
+ else backToOrigin();
+};
 // Annotations are scoped to the current quiz session, not stored in answer history.
 function updateHighlightButton(){
  const btn=$("highlight-toggle");btn.classList.toggle("active-tool",highlighterActive);
@@ -484,10 +527,56 @@ document.addEventListener("pointerup",()=>{
 });
 $("prompt").addEventListener("keyup",applySelectedHighlight);
 
+function showExamReview(){
+ if(!examMode||examSubmitted)return;
+ document.body.classList.add("exam-review-mode");document.body.classList.remove("exam-result-mode");
+ const answered=examDrafts.size,total=session.length,unanswered=total-answered;
+ $("exam-review-summary").textContent=answered+" of "+total+" answered"+(unanswered?" · "+unanswered+" unanswered will count as incorrect.":".");
+ $("exam-review").classList.remove("hidden");$("exam-results").classList.add("hidden");
+ renderToc();
+}
+$("exam-return").onclick=()=>{
+ document.body.classList.remove("exam-review-mode");
+ $("exam-review").classList.add("hidden");render();
+};
+function submitEntireExam(){
+ if(!examMode||examSubmitted)return;
+ const unanswered=session.length-examDrafts.size;
+ if(unanswered&&!confirm(unanswered+" unanswered question(s) will count as incorrect. Submit exam anyway?"))return;
+ examSubmitted=true; // prevents duplicate scoring even with rapid clicks
+ const changes={};let score=0;
+ for(const q of session){
+  const selected=examDrafts.get(q.id);
+  if(!selected)continue; // unanswered score zero, but do not invent an attempt
+  const attempt={answer:selected,correct:selected===q.correct,at:new Date().toISOString(),version:q.version||"1"};
+  if(attempt.correct)score++;
+  const rec=progress[q.id]||{attempts:[],bookmark:false};
+  rec.attempts=rec.attempts||[];
+  rec.attempts.push(attempt);
+  progress[q.id]=rec;changes[q.id]=rec;
+  sessionAnswers.set(q.id,attempt);
+ }
+ // Write progress once, with only the updated question records synced to the cloud.
+ localStorage.setItem(progressKey(),JSON.stringify(progress));
+ if(activeUid&&window.ExamAuth?.saveChanges&&Object.keys(changes).length){
+  window.ExamAuth.saveChanges(changes).catch(e=>window.ExamAuth.showSyncError?.(e));
+ }
+ updateStats();updateMatch();
+ $("exam-score").textContent=score+" / "+session.length;
+ $("exam-score-details").textContent=Math.round(100*score/session.length)+"% correct · "+examDrafts.size+" answered · "+(session.length-examDrafts.size)+" unanswered";
+ $("exam-review").classList.add("hidden");$("exam-results").classList.remove("hidden");
+ document.body.classList.remove("exam-review-mode");document.body.classList.add("exam-result-mode");
+}
+$("exam-submit-all").onclick=submitEntireExam;
+$("exam-home").onclick=()=>{examSubmitted=true;document.body.classList.remove("exam-result-mode","exam-review-mode");showHome()};
+
 function render(){
  const q=session[idx];if(!q)return;
- const recall=q.type==="recall",attempted=repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length;
- draft=null;
+ const recall=q.type==="recall";
+ const attempted=examMode?!examSubmitted&&false:(studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length));
+ // In exam mode no previous or current results are shown before final submission.
+ const pending=examMode?examDrafts.get(q.id):studyDrafts.get(q.id);
+ draft=pending||null;
  $("position").textContent="Question "+(idx+1)+" of "+session.length;
  $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
  $("meta").classList.toggle("hidden",!attempted);
@@ -501,33 +590,41 @@ function render(){
  $("reveal").classList.toggle("hidden",!recall||attempted);
  $("choices").replaceChildren();
  if(!recall){
-    const options=["A","B","C","D","E"].filter(k=>q[k]?.trim());
-    if(!sessionOptionOrders.has(q.id))sessionOptionOrders.set(q.id,$("shuffle-options").checked?shuffle(options):options);
-    orderedOptions=sessionOptionOrders.get(q.id);
-    orderedOptions.forEach((k,i)=>{
-       const btn=document.createElement("button");btn.className="option";
-       btn.textContent=String.fromCharCode(65+i)+". "+q[k];btn.dataset.key=k;btn.disabled=attempted;
-       // Right-click crosses out the option without submitting an answer.
-       const crossed=sessionCrossouts.get(q.id);
-       if(crossed?.has(k))btn.classList.add("crossed-off");
-       btn.oncontextmenu=e=>{
-        e.preventDefault();
-        if(btn.disabled)return;
-        let set=sessionCrossouts.get(q.id);
-        if(!set){set=new Set();sessionCrossouts.set(q.id,set)}
-        if(set.has(k))set.delete(k);else set.add(k);
-        btn.classList.toggle("crossed-off",set.has(k));
-       };
-       btn.onclick=()=>recordAnswer(q,k);$("choices").append(btn);
-    });
+  const options=["A","B","C","D","E"].filter(k=>q[k]?.trim());
+  if(!sessionOptionOrders.has(q.id))sessionOptionOrders.set(q.id,$("shuffle-options").checked?shuffle(options):options);
+  orderedOptions=sessionOptionOrders.get(q.id);
+  orderedOptions.forEach((key,i)=>{
+   const btn=document.createElement("button");btn.className="option";btn.type="button";
+   btn.textContent=String.fromCharCode(65+i)+". "+q[key];btn.dataset.key=key;btn.disabled=attempted;
+   if(pending===key){btn.classList.add("selected");btn.setAttribute("aria-pressed","true")}
+   else btn.setAttribute("aria-pressed","false");
+   if(sessionCrossouts.get(q.id)?.has(key))btn.classList.add("crossed-off");
+   btn.oncontextmenu=e=>{
+    e.preventDefault();if(btn.disabled)return;
+    let set=sessionCrossouts.get(q.id);if(!set){set=new Set();sessionCrossouts.set(q.id,set)}
+    if(set.has(key))set.delete(key);else set.add(key);
+    btn.classList.toggle("crossed-off",set.has(key));
+   };
+   btn.onclick=()=>{
+    if(btn.disabled)return;
+    if(examMode)examDrafts.set(q.id,key);
+    else studyDrafts.set(q.id,key);
+    render();
+   };
+   $("choices").append(btn);
+  });
  }
- $("retry").classList.toggle("hidden",!attempted);
+ $("retry").classList.toggle("hidden",!attempted||examMode);
+ $("submit-answer").classList.toggle("hidden",examMode||recall);
+ $("submit-answer").disabled=attempted||!pending;
  $("feedback").classList.toggle("hidden",!attempted);
  if(attempted)showFeedback(q);
  $("prev").disabled=idx===0;
- $("next").textContent=idx===session.length-1?"Finish":"Next →";
+ $("next").textContent=idx===session.length-1?(examMode?"Review & submit":"Finish"):"Next →";
  $("progressbar").style.width=((idx+1)/session.length*100)+"%";
- $("question-status").textContent=attempted?"Answered — review the explanation or retry.":"Select an answer to view feedback.";
+ $("question-status").textContent=examMode?
+  (pending?"Answer selected — not submitted.":"Select an answer. Your exam will be graded at the end."):
+  (attempted?"Answered — review the explanation or retry.":pending?"Answer selected — press Submit answer.":"Select an option, then submit your answer.");
  renderToc();requestAnimationFrame(fitQuestion);
 }
 // Answer keys in the Sheet use source A–E positions, but shuffle changes their displayed labels.
@@ -574,17 +671,25 @@ function showFeedback(q){
  }
 }
 function recordAnswer(q,answer){
- if(q.type==="mcq"&&document.querySelectorAll("#choices .option:disabled").length)return;
- if(q.type==="recall"&&$("recall-rating").classList.contains("hidden"))return;
+ if(examMode)return; // Exam answers are recorded only by submitEntireExam().
  const rec=progress[q.id]||{attempts:[],bookmark:false};
  rec.attempts=rec.attempts||[];
  const attempt={answer,correct:q.type==="recall"?answer==="self_correct":answer===q.correct,at:new Date().toISOString(),version:q.version||"1"};
  rec.attempts.push(attempt);
  if(repeatAnsweredInSession)sessionAnswers.set(q.id,attempt);
+ studyRetrying.delete(q.id);
+ studyDrafts.delete(q.id);
  progress[q.id]=rec;save(q.id);updateStats();updateMatch();
- $("feedback").classList.remove("hidden");$("retry").classList.remove("hidden");
- showFeedback(q);renderToc();requestAnimationFrame(fitQuestion);
+ render();
 }
+$("submit-answer").onclick=()=>{
+ const q=session[idx];if(!q||examMode)return;
+ const selected=studyDrafts.get(q.id);
+ if(!selected)return;
+ const already=studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length);
+ if(already)return;
+ recordAnswer(q,selected);
+};
 $("reveal").onclick=()=>{
  const q=session[idx];if(!q||q.type!=="recall")return;
  $("reveal").classList.add("hidden");
@@ -596,19 +701,11 @@ $("reveal").onclick=()=>{
 $("self-correct").onclick=()=>recordAnswer(session[idx],"self_correct");
 $("self-incorrect").onclick=()=>recordAnswer(session[idx],"self_incorrect");
 $("retry").onclick=()=>{
- const q=session[idx];if(!q)return;
- draft=null;
- if(repeatAnsweredInSession){sessionAnswers.delete(q.id);render();return}
- if(q.type==="recall"){
-   $("reveal").classList.remove("hidden");$("recall-rating").classList.add("hidden");
- }else{
-   document.querySelectorAll("#choices .option").forEach(x=>{
-    x.disabled=false;x.classList.remove("selected","correct","incorrect")
-   });
- }
- $("feedback").classList.add("hidden");$("retry").classList.add("hidden");
- $("meta").classList.add("hidden");$("reference").classList.add("hidden");
- requestAnimationFrame(fitQuestion);
+ const q=session[idx];if(!q||examMode)return;
+ studyDrafts.delete(q.id);
+ studyRetrying.add(q.id);
+ if(repeatAnsweredInSession)sessionAnswers.delete(q.id);
+ render();
 };
 $("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save(q.id);render()};
 $("export").onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,exported:new Date().toISOString(),progress},null,2)],{type:"application/json"}),link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="molec-exam3-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
