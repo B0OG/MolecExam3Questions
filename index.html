@@ -168,6 +168,24 @@ body.quiz-mode #quiz.panel{display:flex!important;flex-direction:column;backgrou
 @media(max-width:570px){main{padding:10px 8px 30px}.home-head{align-items:stretch;flex-direction:column}.home-panel{padding:13px}.stats{gap:5px}.stat{padding:9px}body.quiz-mode main{padding:5px}body.quiz-mode header{margin-bottom:5px}#app-shell.app-shell,body.quiz-mode #app-shell.app-shell,#app-shell.toc-hidden{grid-template-columns:minmax(0,1fr);gap:0}#quiz-sidebar.sidebar{position:fixed;left:5px;top:58px;bottom:5px;width:145px;z-index:9;box-shadow:5px 4px 24px #0005}#app-shell.toc-hidden #quiz-sidebar{display:none}#quiz .question{font-size:calc(.92rem * var(--fit-scale))}#quiz .option{font-size:calc(.81rem * var(--fit-scale))}}
 @media(max-height:660px){body.quiz-mode header{min-height:40px;margin-bottom:5px;padding:5px 10px}.exam-toolbar{padding:5px 9px}.question-content{padding:9px 14px}#quiz .question{margin-bottom:8px}#quiz #choices{gap:5px}#quiz .option{padding:6px 11px}.exam-footer{padding:5px 10px;min-height:43px}}
 
+
+/* Permanent one-column question navigator with its own vertical scrolling. */
+body.quiz-mode #app-shell.app-shell{grid-template-columns:80px minmax(0,1fr);gap:10px}
+body.quiz-mode #quiz-sidebar.sidebar{position:static;top:auto;left:auto;bottom:auto;width:auto;max-height:none;height:100%;min-height:0;overflow:hidden;box-shadow:none}
+body.quiz-mode #quiz-sidebar .toc-header{padding:10px 4px;justify-content:center}
+body.quiz-mode #quiz-sidebar .toc-header h2{font-size:.72rem;text-align:center}
+body.quiz-mode #quiz-sidebar .question-nav{display:flex;flex-direction:column;align-items:center;gap:9px;flex:1 1 0;min-height:0;height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:10px 5px;scrollbar-width:thin}
+body.quiz-mode #quiz-sidebar .question-nav button{flex:0 0 40px;width:40px;height:40px;aspect-ratio:auto;margin:0;border-radius:50%;font-size:.81rem}
+body.quiz-mode #quiz-sidebar .toc-help{font-size:.58rem;text-align:center;padding:7px 4px;line-height:1.35;margin:0}
+@media(max-width:570px){
+ body.quiz-mode #app-shell.app-shell{grid-template-columns:61px minmax(0,1fr);gap:5px}
+ body.quiz-mode #quiz-sidebar.sidebar{position:static;top:auto;left:auto;bottom:auto;width:auto;height:100%;box-shadow:none}
+ body.quiz-mode #quiz-sidebar .toc-header{padding:8px 2px}
+ body.quiz-mode #quiz-sidebar .toc-header h2{font-size:.64rem}
+ body.quiz-mode #quiz-sidebar .question-nav{padding:8px 3px;gap:7px}
+ body.quiz-mode #quiz-sidebar .question-nav button{flex-basis:35px;width:35px;height:35px;font-size:.74rem}
+ body.quiz-mode #quiz-sidebar .toc-help{font-size:.5rem;padding:6px 2px}
+}
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
@@ -189,7 +207,7 @@ body.quiz-mode #quiz.panel{display:flex!important;flex-direction:column;backgrou
  <div id="home-lectures" class="home-lectures"></div></section>
 <div class="app-shell hidden" id="app-shell">
 <aside class="panel sidebar" id="quiz-sidebar" aria-label="Question navigation">
- <div class="line toc-header"><h2>Questions</h2><button id="toc-close" type="button" aria-label="Hide question list">✕</button></div>
+ <div class="line toc-header"><h2>Questions</h2></div>
  <nav id="sidebar-list" class="question-nav" aria-label="Question numbers"></nav>
  <p class="toc-help muted">Filled = answered · Ring = flagged</p>
 </aside>
@@ -213,7 +231,7 @@ body.quiz-mode #quiz.panel{display:flex!important;flex-direction:column;backgrou
 </div><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
 </section>
 <section id="quiz" class="panel">
-<div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="toc-toggle" type="button" aria-controls="quiz-sidebar" aria-expanded="true">☰ Hide contents</button><button id="bookmark" type="button">☆ Flag</button></div>
+<div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="bookmark" type="button">☆ Flag</button></div>
 <div class="bar"><div id="progressbar"></div></div>
 <div id="question-content" class="question-content"><small id="meta" class="question-meta"></small><div id="prompt" class="question"></div>
 <div id="reference" class="reference hidden"></div><div id="choices"></div>
@@ -324,7 +342,7 @@ function buildHome(){
   wrap.append(card);
  }
 }
-let returnView="home",tocVisible=typeof prefs.tocVisible==="boolean"?prefs.tocVisible:window.innerWidth>800;
+let returnView="home";
 function showHome(){
  document.body.classList.remove("builder-mode","quiz-mode");
  $("home-view").classList.remove("hidden");$("app-shell").classList.add("hidden");
@@ -337,13 +355,6 @@ function showBuilder(){
  $("admin-details").classList.add("hidden");$("setup").style.display="block";$("quiz").style.display="none";
  updateMatch();window.scrollTo({top:0,behavior:"instant"});
 }
-function updateTocState(){
- $("app-shell").classList.toggle("toc-hidden",!tocVisible);
- $("toc-toggle").textContent=tocVisible?"☰ Hide contents":"☰ Show contents";
- $("toc-toggle").setAttribute("aria-expanded",String(tocVisible));
- requestAnimationFrame(fitQuestion);
-}
-function toggleToc(){tocVisible=!tocVisible;prefs.tocVisible=tocVisible;savePrefs();updateTocState()}
 function renderToc(){
  const nav=$("sidebar-list");nav.replaceChildren();
  session.forEach((q,i)=>{
@@ -372,12 +383,12 @@ function launchQuiz(list,label,applyCount,origin="home"){
  document.body.classList.remove("builder-mode");document.body.classList.add("quiz-mode");
  $("home-view").classList.add("hidden");$("app-shell").classList.remove("hidden");
  $("admin-details").classList.add("hidden");$("setup").style.display="none";$("quiz").style.display="block";
- updateTocState();render();
+ render();
 }
 function backToOrigin(){if(returnView==="builder")showBuilder();else showHome()}
 $("home-builder").onclick=showBuilder;
 $("builder-back").onclick=showHome;
-$("toc-toggle").onclick=toggleToc;$("toc-close").onclick=toggleToc;
+
 function updateStats(){const total=questions.length,attempted=questions.filter(q=>progress[q.id]?.attempts?.length),correct=attempted.filter(q=>answerIsCorrect(q,progress[q.id].attempts[0])).length;$("total").textContent=total;$("completed").textContent=attempted.length;$("accuracy").textContent=attempted.length?Math.round(correct/attempted.length*100)+"%":"—";if($("home-lectures"))buildHome()}
 $("lect-all").onclick=()=>{selectedLectures=new Set(questions.map(q=>q.lecture));prefs.excludedLectures=[];savePrefs();setupFilters()};
 $("lect-none").onclick=()=>{selectedLectures.clear();prefs.excludedLectures=[...new Set(questions.map(q=>q.lecture))];savePrefs();setupFilters()};
@@ -393,9 +404,10 @@ function render(){
  draft=null;
  $("position").textContent="Question "+(idx+1)+" of "+session.length;
  $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
+ $("meta").classList.toggle("hidden",!attempted);
  $("prompt").textContent=q.question;
  $("bookmark").textContent=progress[q.id]?.bookmark?"★ Flagged":"☆ Flag";
- $("reference").classList.toggle("hidden",!q.reference);
+ $("reference").classList.toggle("hidden",!attempted||!q.reference);
  $("reference").textContent=q.reference||"";
  $("choices").classList.toggle("hidden",recall);
  $("recall-controls").classList.toggle("hidden",!recall);
@@ -423,6 +435,9 @@ function render(){
 function showFeedback(q){
  const rec=progress[q.id],last=rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
  const right=answerIsCorrect(q,last);
+ // Lecture/source metadata stays hidden until an answer is submitted.
+ $("meta").classList.remove("hidden");
+ $("reference").classList.toggle("hidden",!q.reference);
  $("feedback").replaceChildren();
  const heading=document.createElement("strong");heading.className=right?"ok":"wrong";
  heading.textContent=recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect");
@@ -474,7 +489,9 @@ $("retry").onclick=()=>{
     x.disabled=false;x.classList.remove("selected","correct","incorrect")
    });
  }
- $("feedback").classList.add("hidden");$("retry").classList.add("hidden");requestAnimationFrame(fitQuestion);
+ $("feedback").classList.add("hidden");$("retry").classList.add("hidden");
+ $("meta").classList.add("hidden");$("reference").classList.add("hidden");
+ requestAnimationFrame(fitQuestion);
 };
 $("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save(q.id);render()};
 $("export").onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,exported:new Date().toISOString(),progress},null,2)],{type:"application/json"}),link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="molec-exam3-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
