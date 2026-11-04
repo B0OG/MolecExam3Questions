@@ -190,6 +190,18 @@ body.quiz-mode #quiz-sidebar .toc-help{font-size:.58rem;text-align:center;paddin
 /* Custom quiz repeat mode */
 #setup .repeat-option{grid-column:1 / -1;display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--chrome-border);border-radius:8px;padding:12px 14px;font-weight:650}
 #setup .repeat-note{font-size:.8rem;line-height:1.5;margin:10px 0 0}
+
+/* Right-click elimination and text-highlighter tools */
+#quiz .option.crossed-off{opacity:.57;text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--bad)}
+#quiz .option.crossed-off.correct{opacity:1}
+#highlight-toggle.active-tool{background:#fff0b0;border-color:#d59a24;color:#604400;box-shadow:inset 0 0 0 1px #d59a24}
+body.dark #highlight-toggle.active-tool{background:#685220;color:#fff1c0;border-color:#e2b455}
+#quiz #prompt.highlight-mode{cursor:text;user-select:text}
+#quiz mark.quiz-mark{background:#ffe17a;color:#1f2530;border-radius:2px;padding:0 .02em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+body.dark #quiz mark.quiz-mark{background:#e6c155;color:#1d1d20}
+#clear-highlights{font-size:.76rem;min-width:0}
+@media(max-width:570px){.exam-toolbar{flex-wrap:wrap}.exam-toolbar .exam-title{order:0;flex-basis:100%;max-width:none}.exam-toolbar #back{order:1}.exam-toolbar #highlight-toggle{order:2}.exam-toolbar #clear-highlights{order:3}.exam-toolbar #bookmark{order:4}}
+
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
@@ -236,9 +248,9 @@ body.quiz-mode #quiz-sidebar .toc-help{font-size:.58rem;text-align:center;paddin
 </div><p class="muted repeat-note">When enabled, previously answered questions start blank, with no previous answer or explanation shown. Your earlier attempts and first-try accuracy remain saved.</p><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
 </section>
 <section id="quiz" class="panel">
-<div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="bookmark" type="button">☆ Flag</button></div>
+<div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="highlight-toggle" type="button" title="Highlight text in the question by selecting it" aria-pressed="false">🖍 Highlight</button><button id="clear-highlights" class="hidden" type="button" title="Clear highlights on this question">Clear</button><button id="bookmark" type="button">☆ Flag</button></div>
 <div class="bar"><div id="progressbar"></div></div>
-<div id="question-content" class="question-content"><small id="meta" class="question-meta"></small><div id="prompt" class="question"></div>
+<div id="question-content" class="question-content"><small id="meta" class="question-meta"></small><div id="prompt" class="question" title="Select text to highlight when Highlight is enabled"></div>
 <div id="reference" class="reference hidden"></div><div id="choices"></div>
 <div id="recall-controls" class="hidden"><button id="reveal" type="button">Reveal answer</button><div id="recall-rating" class="line hidden"><button id="self-correct" type="button">I recalled correctly</button><button id="self-incorrect" type="button">I missed it</button></div></div>
 <div id="feedback" class="feedback hidden" aria-live="polite"></div></div>
@@ -259,7 +271,8 @@ const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="mo
 const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv"; // Shared published question-bank CSV URL.
 let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set(),activeUid=null;
 let repeatAnsweredInSession=false;
-const sessionAnswers=new Map(),sessionOptionOrders=new Map();
+const sessionAnswers=new Map(),sessionOptionOrders=new Map(),sessionCrossouts=new Map(),sessionHighlights=new Map();
+let highlighterActive=false;
 function readProgress(key){try{const obj=JSON.parse(localStorage.getItem(key)||"{}");return obj&&typeof obj==="object"&&!Array.isArray(obj)?obj:{}}catch{return {}}}
 function progressKey(){return activeUid?STORE+":user:"+activeUid:STORE}
 try{progress=readProgress(STORE);prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{progress=readProgress(STORE)}
@@ -388,7 +401,8 @@ function launchQuiz(list,label,applyCount,origin="home"){
  if(applyCount){const n=parseInt($("count").value,10);if(Number.isFinite(n))session=session.slice(0,n)}
  idx=0;returnView=origin;$("quiz-label").textContent=label;
  repeatAnsweredInSession=origin==="builder"&&$("repeat-answered").checked;
- sessionAnswers.clear();sessionOptionOrders.clear();
+ sessionAnswers.clear();sessionOptionOrders.clear();sessionCrossouts.clear();sessionHighlights.clear();
+ highlighterActive=false;updateHighlightButton();
  document.body.classList.remove("builder-mode");document.body.classList.add("quiz-mode");
  $("home-view").classList.add("hidden");$("app-shell").classList.remove("hidden");
  $("admin-details").classList.add("hidden");$("setup").style.display="none";$("quiz").style.display="block";
@@ -407,6 +421,69 @@ $("start").onclick=()=>launchQuiz(matches(),"Custom quiz",true,"builder");
 $("back").onclick=backToOrigin;
 $("prev").onclick=()=>{if(idx>0){idx--;render()}};
 $("next").onclick=()=>{if(idx<session.length-1){idx++;render()}else backToOrigin()};
+// Annotations are scoped to the current quiz session, not stored in answer history.
+function updateHighlightButton(){
+ const btn=$("highlight-toggle");btn.classList.toggle("active-tool",highlighterActive);
+ btn.setAttribute("aria-pressed",String(highlighterActive));
+ btn.textContent=highlighterActive?"🖍 Highlight on":"🖍 Highlight";
+ $("prompt").classList.toggle("highlight-mode",highlighterActive);
+}
+function mergeHighlightRanges(ranges){
+ const sorted=ranges.filter(r=>r[1]>r[0]).map(r=>[r[0],r[1]]).sort((a,b)=>a[0]-b[0]),merged=[];
+ for(const [start,end] of sorted){
+  const last=merged[merged.length-1];
+  if(last&&start<=last[1])last[1]=Math.max(last[1],end);
+  else merged.push([start,end]);
+ }
+ return merged;
+}
+function renderHighlightedPrompt(q){
+ const root=$("prompt"),text=q.question||"";
+ root.replaceChildren();
+ const ranges=(sessionHighlights.get(q.id)||[]).map(r=>[Math.max(0,Math.min(text.length,r[0])),Math.max(0,Math.min(text.length,r[1]))]);
+ let offset=0;
+ for(const [start,end] of mergeHighlightRanges(ranges)){
+  if(start>offset)root.append(document.createTextNode(text.slice(offset,start)));
+  const mark=document.createElement("mark");mark.className="quiz-mark";
+  mark.textContent=text.slice(start,end);root.append(mark);offset=end;
+ }
+ if(offset<text.length)root.append(document.createTextNode(text.slice(offset)));
+ $("clear-highlights").classList.toggle("hidden",!ranges.length);
+ updateHighlightButton();
+}
+// Convert a selected DOM range back to offsets in the original question text.
+// This works even after earlier highlights split the stem into text/mark nodes.
+function applySelectedHighlight(){
+ if(!highlighterActive||!document.body.classList.contains("quiz-mode")||!session[idx])return;
+ const sel=window.getSelection();
+ if(!sel||sel.isCollapsed||sel.rangeCount<1)return;
+ const range=sel.getRangeAt(0),root=$("prompt");
+ if(!root.contains(range.startContainer)||!root.contains(range.endContainer))return;
+ const before=document.createRange();before.selectNodeContents(root);
+ before.setEnd(range.startContainer,range.startOffset);
+ const start=before.toString().length;
+ before.setEnd(range.endContainer,range.endOffset);
+ const end=before.toString().length;
+ if(start===end)return;
+ const q=session[idx],old=sessionHighlights.get(q.id)||[];
+ sessionHighlights.set(q.id,mergeHighlightRanges([...old,[start,end]]));
+ sel.removeAllRanges();
+ renderHighlightedPrompt(q);
+ requestAnimationFrame(fitQuestion);
+}
+$("highlight-toggle").onclick=()=>{
+ highlighterActive=!highlighterActive;updateHighlightButton();
+};
+$("clear-highlights").onclick=()=>{
+ if(!session[idx])return;
+ sessionHighlights.delete(session[idx].id);
+ renderHighlightedPrompt(session[idx]);requestAnimationFrame(fitQuestion);
+};
+document.addEventListener("pointerup",()=>{
+ if(highlighterActive)requestAnimationFrame(applySelectedHighlight);
+});
+$("prompt").addEventListener("keyup",applySelectedHighlight);
+
 function render(){
  const q=session[idx];if(!q)return;
  const recall=q.type==="recall",attempted=repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length;
@@ -414,7 +491,7 @@ function render(){
  $("position").textContent="Question "+(idx+1)+" of "+session.length;
  $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
  $("meta").classList.toggle("hidden",!attempted);
- $("prompt").textContent=q.question;
+ renderHighlightedPrompt(q);
  $("bookmark").textContent=progress[q.id]?.bookmark?"★ Flagged":"☆ Flag";
  $("reference").classList.toggle("hidden",!attempted||!q.reference);
  $("reference").textContent=q.reference||"";
@@ -430,6 +507,17 @@ function render(){
     orderedOptions.forEach((k,i)=>{
        const btn=document.createElement("button");btn.className="option";
        btn.textContent=String.fromCharCode(65+i)+". "+q[k];btn.dataset.key=k;btn.disabled=attempted;
+       // Right-click crosses out the option without submitting an answer.
+       const crossed=sessionCrossouts.get(q.id);
+       if(crossed?.has(k))btn.classList.add("crossed-off");
+       btn.oncontextmenu=e=>{
+        e.preventDefault();
+        if(btn.disabled)return;
+        let set=sessionCrossouts.get(q.id);
+        if(!set){set=new Set();sessionCrossouts.set(q.id,set)}
+        if(set.has(k))set.delete(k);else set.add(k);
+        btn.classList.toggle("crossed-off",set.has(k));
+       };
        btn.onclick=()=>recordAnswer(q,k);$("choices").append(btn);
     });
  }
