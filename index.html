@@ -186,6 +186,10 @@ body.quiz-mode #quiz-sidebar .toc-help{font-size:.58rem;text-align:center;paddin
  body.quiz-mode #quiz-sidebar .question-nav button{flex-basis:35px;width:35px;height:35px;font-size:.74rem}
  body.quiz-mode #quiz-sidebar .toc-help{font-size:.5rem;padding:6px 2px}
 }
+
+/* Custom quiz repeat mode */
+#setup .repeat-option{grid-column:1 / -1;display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--chrome-border);border-radius:8px;padding:12px 14px;font-weight:650}
+#setup .repeat-note{font-size:.8rem;line-height:1.5;margin:10px 0 0}
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
@@ -225,10 +229,11 @@ body.quiz-mode #quiz-sidebar .toc-help{font-size:.58rem;text-align:center;paddin
 </div>
 <div class="controls">
 <label class="field">Number of questions<select id="count"><option value="all">All available</option><option>10</option><option selected>20</option><option>50</option></select></label>
-<label class="field">Progress filter<select id="filter"><option value="all">All questions</option><option value="unanswered">Unanswered only</option><option value="wrong">Previously incorrect</option><option value="bookmarked">Bookmarked</option></select></label>
+<label class="field">Progress filter<select id="filter"><option value="all">All questions</option><option value="unanswered">Unanswered only</option><option value="answered">Answered only</option><option value="wrong">Previously incorrect</option><option value="bookmarked">Bookmarked</option></select></label>
 <label class="toggle"><input id="shuffle" type="checkbox" checked> Shuffle questions</label>
 <label class="toggle"><input id="shuffle-options" type="checkbox" checked> Shuffle answer choices</label>
-</div><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
+<label class="toggle repeat-option"><input id="repeat-answered" type="checkbox"> Repeat answered questions as new</label>
+</div><p class="muted repeat-note">When enabled, previously answered questions start blank, with no previous answer or explanation shown. Your earlier attempts and first-try accuracy remain saved.</p><div class="line" style="margin-top:18px"><button class="primary" id="start">Start quiz</button><span id="match" class="muted"></span></div>
 </section>
 <section id="quiz" class="panel">
 <div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="bookmark" type="button">☆ Flag</button></div>
@@ -253,6 +258,8 @@ const SAMPLE=[];
 const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="molec-exam3-preferences-v1";
 const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv"; // Shared published question-bank CSV URL.
 let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set(),activeUid=null;
+let repeatAnsweredInSession=false;
+const sessionAnswers=new Map(),sessionOptionOrders=new Map();
 function readProgress(key){try{const obj=JSON.parse(localStorage.getItem(key)||"{}");return obj&&typeof obj==="object"&&!Array.isArray(obj)?obj:{}}catch{return {}}}
 function progressKey(){return activeUid?STORE+":user:"+activeUid:STORE}
 try{progress=readProgress(STORE);prefs=JSON.parse(localStorage.getItem(PREF)||"{}")}catch{progress=readProgress(STORE)}
@@ -294,7 +301,7 @@ window.ExamQuiz={
 function savePrefs(){localStorage.setItem(PREF,JSON.stringify(prefs))}
 if(prefs.dark)document.body.classList.add("dark");
 $("theme").onclick=()=>{document.body.classList.toggle("dark");prefs.dark=document.body.classList.contains("dark");savePrefs()};
-for(const id of ["shuffle","shuffle-options","count","filter"]){if(prefs[id]!==undefined){$(id).type==="checkbox"?$(id).checked=prefs[id]:$(id).value=prefs[id]}$(id).addEventListener("change",()=>{prefs[id]=$(id).type==="checkbox"?$(id).checked:$(id).value;savePrefs();updateMatch()})}
+for(const id of ["shuffle","shuffle-options","repeat-answered","count","filter"]){if(prefs[id]!==undefined){$(id).type==="checkbox"?$(id).checked=prefs[id]:$(id).value=prefs[id]}$(id).addEventListener("change",()=>{prefs[id]=$(id).type==="checkbox"?$(id).checked:$(id).value;savePrefs();updateMatch()})}
 function parseCSV(text){const out=[];let row=[],cell="",quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===","&&!quoted){row.push(cell);cell=""}else if((c==="\n"||c==="\r")&&!quoted){if(c==="\r"&&text[i+1]==="\n")i++;row.push(cell);if(row.some(x=>x!==""))out.push(row);row=[];cell=""}else cell+=c}if(cell!==""||row.length){row.push(cell);out.push(row)}const header=out.shift()?.map(x=>x.trim().replace(/^\uFEFF/,""))||[];return out.map(r=>Object.fromEntries(header.map((h,i)=>[h,(r[i]||"").trim()])))}
 function validate(list){
  const seen=new Set();
@@ -320,7 +327,7 @@ function answerIsCorrect(q,attempt){
  if(q.type==="mcq" && /^[A-E]$/i.test(String(attempt.answer||""))) return String(attempt.answer).toUpperCase()===q.correct;
  return !!attempt.correct;
 }
-function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!answerIsCorrect(q,a)))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
+function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="answered"&&!!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!answerIsCorrect(q,a)))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
 function updateMatch(){$("match").textContent=matches().length+" matching questions";$("start").disabled=!matches().length}
 function buildHome(){
  const wrap=$("home-lectures");wrap.replaceChildren();
@@ -362,7 +369,7 @@ function renderToc(){
   btn.type="button";btn.textContent=String(i+1);
   btn.title="Question "+(i+1)+(p?.bookmark?" (flagged)":"")+(p?.attempts?.length?" (answered)":"");
   if(i===idx){btn.classList.add("active");btn.setAttribute("aria-current","step")}
-  if(p?.attempts?.length)btn.classList.add("answered");
+  if(repeatAnsweredInSession?sessionAnswers.has(q.id):!!p?.attempts?.length)btn.classList.add("answered");
   if(p?.bookmark)btn.classList.add("flagged");
   btn.onclick=()=>{idx=i;render()};nav.append(btn);
  });
@@ -380,6 +387,8 @@ function launchQuiz(list,label,applyCount,origin="home"){
  session=$("shuffle").checked?shuffle(list):[...list];
  if(applyCount){const n=parseInt($("count").value,10);if(Number.isFinite(n))session=session.slice(0,n)}
  idx=0;returnView=origin;$("quiz-label").textContent=label;
+ repeatAnsweredInSession=origin==="builder"&&$("repeat-answered").checked;
+ sessionAnswers.clear();sessionOptionOrders.clear();
  document.body.classList.remove("builder-mode");document.body.classList.add("quiz-mode");
  $("home-view").classList.add("hidden");$("app-shell").classList.remove("hidden");
  $("admin-details").classList.add("hidden");$("setup").style.display="none";$("quiz").style.display="block";
@@ -400,7 +409,7 @@ $("prev").onclick=()=>{if(idx>0){idx--;render()}};
 $("next").onclick=()=>{if(idx<session.length-1){idx++;render()}else backToOrigin()};
 function render(){
  const q=session[idx];if(!q)return;
- const recall=q.type==="recall",attempted=!!progress[q.id]?.attempts?.length;
+ const recall=q.type==="recall",attempted=repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length;
  draft=null;
  $("position").textContent="Question "+(idx+1)+" of "+session.length;
  $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
@@ -416,7 +425,8 @@ function render(){
  $("choices").replaceChildren();
  if(!recall){
     const options=["A","B","C","D","E"].filter(k=>q[k]?.trim());
-    orderedOptions=$("shuffle-options").checked?shuffle(options):options;
+    if(!sessionOptionOrders.has(q.id))sessionOptionOrders.set(q.id,$("shuffle-options").checked?shuffle(options):options);
+    orderedOptions=sessionOptionOrders.get(q.id);
     orderedOptions.forEach((k,i)=>{
        const btn=document.createElement("button");btn.className="option";
        btn.textContent=String.fromCharCode(65+i)+". "+q[k];btn.dataset.key=k;btn.disabled=attempted;
@@ -433,7 +443,7 @@ function render(){
  renderToc();requestAnimationFrame(fitQuestion);
 }
 function showFeedback(q){
- const rec=progress[q.id],last=rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
+ const rec=progress[q.id],last=repeatAnsweredInSession?sessionAnswers.get(q.id):rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
  const right=answerIsCorrect(q,last);
  // Lecture/source metadata stays hidden until an answer is submitted.
  $("meta").classList.remove("hidden");
@@ -464,7 +474,9 @@ function recordAnswer(q,answer){
  if(q.type==="recall"&&$("recall-rating").classList.contains("hidden"))return;
  const rec=progress[q.id]||{attempts:[],bookmark:false};
  rec.attempts=rec.attempts||[];
- rec.attempts.push({answer,correct:q.type==="recall"?answer==="self_correct":answer===q.correct,at:new Date().toISOString(),version:q.version||"1"});
+ const attempt={answer,correct:q.type==="recall"?answer==="self_correct":answer===q.correct,at:new Date().toISOString(),version:q.version||"1"};
+ rec.attempts.push(attempt);
+ if(repeatAnsweredInSession)sessionAnswers.set(q.id,attempt);
  progress[q.id]=rec;save(q.id);updateStats();updateMatch();
  $("feedback").classList.remove("hidden");$("retry").classList.remove("hidden");
  showFeedback(q);renderToc();requestAnimationFrame(fitQuestion);
@@ -482,6 +494,7 @@ $("self-incorrect").onclick=()=>recordAnswer(session[idx],"self_incorrect");
 $("retry").onclick=()=>{
  const q=session[idx];if(!q)return;
  draft=null;
+ if(repeatAnsweredInSession){sessionAnswers.delete(q.id);render();return}
  if(q.type==="recall"){
    $("reveal").classList.remove("hidden");$("recall-rating").classList.add("hidden");
  }else{
