@@ -379,7 +379,11 @@ function validate(list){
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const sourceUrl=()=>localStorage.getItem("molec-exam3-csv-url")||DEFAULT_CSV_URL;
 async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="No questions loaded. Check the published Google Sheet connection.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}questions=validate(data);$("notice").textContent=message;setupFilters();updateStats();buildHome()}
-function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(),allCats=[...new Set(questions.map(q=>q.category))].sort();const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect,selectedLectures,"excludedLectures");drawChecks("categories",allCats,selectedCats,"excludedCats");updateMatch()}
+const LECTURE_ORDER=["Metabolic Fuels ILA","Introduction to Bacteriology","Clinical Bacteriology","Human Microbiome","Introduction to Virology","Introduction to Mycology","Introduction to Parasitology","Cellular Bioenergetics ILA","Glycolysis","Polio","Introduction to Immunology","Cells and Organs of the Immune System","Synthesis of Glycosides ILA","Glycogen Metabolism","Pentose Phosphate Pathway","TCA Cycle","OxPhos and Mitochondrial Function","Oxygen Toxicity and Free Radical Damage","Gluconeogenesis","Innate Immunity","Adaptive Immunity","Antigen Capture and Presentation"];
+const CATEGORY_ORDER=["Intro Questions (AI)","Exam Style Questions (AI)","USMLE Style (AI)","Bits Questions","Faculty Questions","Intro Questions","USMLE AI Questions"];
+const lectureSort=(a,b)=>{const ia=LECTURE_ORDER.indexOf(a),ib=LECTURE_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
+const categorySort=(a,b)=>{const ia=CATEGORY_ORDER.indexOf(a),ib=CATEGORY_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
+function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort),allCats=[...new Set(questions.map(q=>q.category))].sort(categorySort);const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect,selectedLectures,"excludedLectures");drawChecks("categories",allCats,selectedCats,"excludedCats");updateMatch()}
 function drawChecks(id,items,set,key){const wrap=$(id);wrap.replaceChildren();items.forEach(x=>{const label=document.createElement("label"),input=document.createElement("input"),text=document.createElement("span");input.type="checkbox";input.checked=set.has(x);input.onchange=()=>{input.checked?set.add(x):set.delete(x);prefs[key]=items.filter(v=>!set.has(v));savePrefs();updateMatch()};text.textContent=x;label.append(input,text);wrap.append(label)})}
 // Grade MCQ responses against the latest answer key, not a cached Boolean from an older key.
 function answerIsCorrect(q,attempt){
@@ -391,7 +395,7 @@ function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&s
 function updateMatch(){$("match").textContent=matches().length+" matching questions";$("start").disabled=!matches().length}
 function buildHome(){
  const wrap=$("home-lectures");wrap.replaceChildren();
- const names=[...new Set(questions.map(q=>q.lecture))].sort();
+ const names=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort);
  if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent="No questions available. Check the Google Sheet connection.";wrap.append(p);return}
  for(const name of names){
   const all=questions.filter(q=>q.lecture===name),card=document.createElement("article");card.className="lecture-card";
@@ -405,7 +409,7 @@ function buildHome(){
    btn.append(nameSpan,n);btn.onclick=()=>launchQuiz(list,name+" — "+label,false,"home");card.append(btn);
   }
   link("All questions",all,true);
-  [...new Set(all.map(q=>q.category))].sort().forEach(c=>link(c,all.filter(q=>q.category===c),false));
+  [...new Set(all.map(q=>q.category))].sort(categorySort).forEach(c=>link(c,all.filter(q=>q.category===c),false));
   wrap.append(card);
  }
 }
