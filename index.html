@@ -299,7 +299,7 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 </section>
 <section id="exam-results" class="exam-finish-panel hidden" aria-labelledby="exam-results-title">
  <h2 id="exam-results-title">Exam complete</h2><div class="exam-score" id="exam-score"></div><p id="exam-score-details" class="muted"></p>
- <button id="exam-home" class="primary" type="button">Back to homepage</button>
+ <div class="line"><button id="exam-review-answers" type="button">Review answers &amp; lecture slides</button><button id="exam-home" class="primary" type="button">Back to homepage</button></div>
 </section>
 </div></div>
 <details class="panel" id="admin-details"><summary><strong>Progress backup and question source</strong></summary>
@@ -309,6 +309,7 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 <div class="line" style="margin-top:8px"><button id="saveurl">Save source and reload</button><button id="clearurl">Use sample questions</button><button id="refresh">Refresh questions</button></div>
 <p class="muted">Questions load from the published Google Sheet; the URL field above is a per-device override. Sheet changes may take a few minutes to appear.</p></details>
 </main>
+<script src="./gluconeogenesis-slides.js"></script>
 <script>
 "use strict";
 const SAMPLE=[];
@@ -588,12 +589,13 @@ function submitEntireExam(){
  document.body.classList.remove("exam-review-mode");document.body.classList.add("exam-result-mode");
 }
 $("exam-submit-all").onclick=submitEntireExam;
+$("exam-review-answers").onclick=()=>{if(!examSubmitted)return;document.body.classList.remove("exam-result-mode","exam-review-mode");$("exam-results").classList.add("hidden");render()};
 $("exam-home").onclick=()=>{examSubmitted=true;document.body.classList.remove("exam-result-mode","exam-review-mode");showHome()};
 
 function render(){
  const q=session[idx];if(!q)return;
  const recall=q.type==="recall";
- const attempted=examMode?false:(studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length));
+ const attempted=examMode?examSubmitted:(studyRetrying.has(q.id)?false:(repeatAnsweredInSession?sessionAnswers.has(q.id):!!progress[q.id]?.attempts?.length));
  // In exam mode no previous or current results are shown before final submission.
  const pending=examMode?examDrafts.get(q.id):studyDrafts.get(q.id);
  draft=pending||null;
@@ -640,10 +642,10 @@ function render(){
  $("feedback").classList.toggle("hidden",!attempted);
  if(attempted)showFeedback(q);
  $("prev").disabled=idx===0;
- $("next").textContent=idx===session.length-1?(examMode?"Review & submit":"Finish"):"Next →";
+ $("next").textContent=idx===session.length-1?(examMode&&!examSubmitted?"Review & submit":"Finish"):"Next →";
  $("progressbar").style.width=((idx+1)/session.length*100)+"%";
  $("question-status").textContent=examMode?
-  (pending?"Answer selected — not submitted.":"Select an answer. Your exam will be graded at the end."):
+  (examSubmitted?"Exam submitted — review answers and lecture slides.":pending?"Answer selected — not submitted.":"Select an answer. Your exam will be graded at the end."):
   (attempted?"Answered — review the explanation or retry.":pending?"Answer selected — press Submit answer.":"Select an option, then submit your answer.");
  renderToc();requestAnimationFrame(fitQuestion);
 }
@@ -663,14 +665,14 @@ function displayAwareExplanation(text,q){
   .replace(/\(([A-E])\)/g,(_,letter)=>"("+displayedLetter(q,letter)+")");
 }
 function showFeedback(q){
- const rec=progress[q.id],last=repeatAnsweredInSession?sessionAnswers.get(q.id):rec.attempts[rec.attempts.length-1],recall=q.type==="recall";
+ const rec=progress[q.id]||{attempts:[]},last=examMode?sessionAnswers.get(q.id):(repeatAnsweredInSession?sessionAnswers.get(q.id):rec.attempts[rec.attempts.length-1]),recall=q.type==="recall";
  const right=answerIsCorrect(q,last);
  // Lecture/source metadata stays hidden until an answer is submitted.
  $("meta").classList.remove("hidden");
  $("reference").classList.toggle("hidden",!q.reference);
  $("feedback").replaceChildren();
  const heading=document.createElement("strong");heading.className=right?"ok":"wrong";
- heading.textContent=recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect");
+ heading.textContent=examMode&&!last?"Unanswered":(recall?(right?"Marked correct":"Marked missed"):(right?"Correct":"Incorrect"));
  const expl=document.createElement("p");
  const visibleAnswer=recall?"Faculty answer: "+q.answer:"Correct answer: "+displayedLetter(q,q.correct)+". "+q[q.correct];
  expl.textContent=visibleAnswer+(q.explanation?" — "+displayAwareExplanation(q.explanation,q):"");
@@ -680,13 +682,14 @@ function showFeedback(q){
   warning.textContent="Answer key discrepancy: "+displayAwareExplanation(q.faculty_key_note,q);
   $("feedback").append(warning);
  }
+ window.GlucoSlides?.append(q,$("feedback"));
  if(recall){
    $("reveal").classList.add("hidden");$("recall-rating").classList.add("hidden");
  }else{
    document.querySelectorAll("#choices .option").forEach(el=>{
     el.disabled=true;
     if(el.dataset.key===q.correct)el.classList.add("correct");
-    else if(el.dataset.key===last.answer)el.classList.add("incorrect");
+    else if(el.dataset.key===last?.answer)el.classList.add("incorrect");
    });
  }
 }
