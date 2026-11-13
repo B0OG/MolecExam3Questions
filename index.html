@@ -682,7 +682,7 @@ function showFeedback(q){
   warning.textContent="Answer key discrepancy: "+displayAwareExplanation(q.faculty_key_note,q);
   $("feedback").append(warning);
  }
- window.GlucoSlides?.append(q,$("feedback"));
+ window.GlucoSlides?.append(q,$("feedback"),()=>Boolean(activeUid));
  if(recall){
    $("reveal").classList.add("hidden");$("recall-rating").classList.add("hidden");
  }else{
