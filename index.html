@@ -231,6 +231,13 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
     pointer-events:none;
   }
 }
+.killebrew-custom-filter{margin:8px 0 18px;font-size:.95rem}
+.killebrew-custom-filter input{vertical-align:middle}
+#home-killebrew-section{margin-bottom:22px}
+#question-figure{margin:10px 0 14px}
+#question-figure img{display:block;max-width:100%;max-height:220px;width:auto;height:auto;object-fit:contain;border-radius:6px;border:1px solid var(--border)}
+#question-figure a{display:inline-block;max-width:100%;text-decoration:none}
+#question-figure small{display:block;color:var(--muted);margin-top:4px}
 </style></head><body><main>
 <header><h1>MolecExam3 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
@@ -249,6 +256,10 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 <div id="notice" class="panel">Loading questions…</div>
 <section id="home-view" class="home-panel">
  <div class="home-head"><div><h2>Choose a lecture</h2><p class="muted">Open a lecture or select a question category.</p></div><button class="primary" id="home-builder" type="button">Custom quiz</button></div>
+ <section id="home-killebrew-section" class="hidden" aria-label="Killebrew Questions">
+  <div class="home-head"><div><h2>Killebrew Questions</h2><p class="muted">Faculty-provided practice questions, organized separately from lectures.</p></div></div>
+  <div id="home-killebrew" class="home-lectures"></div>
+ </section>
  <div id="home-lectures" class="home-lectures"></div></section>
 <div class="app-shell hidden" id="app-shell">
 <aside class="panel sidebar" id="quiz-sidebar" aria-label="Question navigation">
@@ -268,6 +279,7 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
     <div id="categories" class="checks"></div>
   </section>
 </div>
+<div class="killebrew-custom-filter"><label><input type="checkbox" id="killebrew-custom"> Include Killebrew Questions in custom quizzes</label></div>
 <div class="controls">
 <label class="field">Number of questions<select id="count"><option value="all">All available</option><option>10</option><option selected>20</option><option>50</option></select></label>
 <label class="field">Progress filter<select id="filter"><option value="all">All questions</option><option value="unanswered">Unanswered only</option><option value="answered">Answered only</option><option value="wrong">Previously incorrect</option><option value="bookmarked">Bookmarked</option></select></label>
@@ -286,7 +298,7 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 <div class="exam-toolbar"><button id="back" type="button">← Back</button><div class="exam-title"><strong id="quiz-label"></strong><span id="position" class="muted"></span></div><button id="highlight-toggle" type="button" title="Highlight text in the question by selecting it" aria-pressed="false">🖍 Highlight</button><button id="clear-highlights" class="hidden" type="button" title="Clear highlights on this question">Clear</button><button id="bookmark" type="button">☆ Flag</button></div>
 <div class="bar"><div id="progressbar"></div></div>
 <div id="question-content" class="question-content"><small id="meta" class="question-meta"></small><div id="prompt" class="question" title="Select text to highlight when Highlight is enabled"></div>
-<div id="reference" class="reference hidden"></div><div id="choices"></div>
+<div id="question-figure" class="hidden"></div><div id="reference" class="reference hidden"></div><div id="choices"></div>
 <div id="recall-controls" class="hidden"><button id="reveal" type="button">Reveal answer</button><div id="recall-rating" class="line hidden"><button id="self-correct" type="button">I recalled correctly</button><button id="self-incorrect" type="button">I missed it</button></div></div>
 <div id="feedback" class="feedback hidden" aria-live="polite"></div></div>
 <div class="exam-footer"><span id="question-status" class="muted">Select an answer to view feedback.</span><div class="line"><button id="retry" class="hidden" type="button">Retry</button><button id="prev" type="button">Previous</button><button id="submit-answer" type="button" class="primary" disabled>Submit answer</button><button id="next" type="button">Next →</button></div></div>
@@ -369,7 +381,7 @@ function validate(list){
  return list.map(q=>({...q,type:(q.type||"mcq").trim().toLowerCase(),correct:(q.correct||"").trim().toUpperCase()}))
  .filter(q=>{
    if(!q.id||!q.lecture||!q.category||!q.question||seen.has(q.id)||q.status==="inactive")return false;
-   const options=["A","B","C","D","E"].filter(k=>typeof q[k]==="string"&&q[k].trim());
+   const options=["A","B","C","D","E","F","G","H"].filter(k=>typeof q[k]==="string"&&q[k].trim());
    // Exclude fill-in-the-blank, recall, and free-response questions. The quiz is MCQ-only.
    if(q.type!=="mcq"||options.length<2||!options.includes(q.correct))return false;
    if(/fill[\s-]*in[\s-]*the[\s-]*blank|free[\s-]*response|recall/i.test(q.category||""))return false;
@@ -384,7 +396,10 @@ const LECTURE_ORDER=["Metabolic Fuels ILA","Human Microbiome","Introduction to B
 const CATEGORY_ORDER=["Intro Questions (AI)","Exam Style Questions (AI)","USMLE Style (AI)","Bits Questions","Faculty Questions","Intro Questions","USMLE AI Questions"];
 const lectureSort=(a,b)=>{const ia=LECTURE_ORDER.indexOf(a),ib=LECTURE_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
 const categorySort=(a,b)=>{const ia=CATEGORY_ORDER.indexOf(a),ib=CATEGORY_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
-function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort),allCats=[...new Set(questions.map(q=>q.category))].sort(categorySort);const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect,selectedLectures,"excludedLectures");drawChecks("categories",allCats,selectedCats,"excludedCats");updateMatch()}
+function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort),allCats=[...new Set(questions.map(q=>q.category))].sort(categorySort);const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect.filter(l=>l!=="Killebrew Questions"),selectedLectures,"excludedLectures");
+drawChecks("categories",allCats.filter(c=>c!=="Killebrew Questions"),selectedCats,"excludedCats");
+$("killebrew-custom").checked=selectedLectures.has("Killebrew Questions")&&selectedCats.has("Killebrew Questions");
+updateMatch()}
 function drawChecks(id,items,set,key){const wrap=$(id);wrap.replaceChildren();items.forEach(x=>{const label=document.createElement("label"),input=document.createElement("input"),text=document.createElement("span");input.type="checkbox";input.checked=set.has(x);input.onchange=()=>{input.checked?set.add(x):set.delete(x);prefs[key]=items.filter(v=>!set.has(v));savePrefs();updateMatch()};text.textContent=x;label.append(input,text);wrap.append(label)})}
 // Grade MCQ responses against the latest answer key, not a cached Boolean from an older key.
 function answerIsCorrect(q,attempt){
@@ -395,8 +410,30 @@ function answerIsCorrect(q,attempt){
 function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="answered"&&!!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!answerIsCorrect(q,a)))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
 function updateMatch(){$("match").textContent=matches().length+" matching questions";$("start").disabled=!matches().length}
 function buildHome(){
+ const special=questions.filter(q=>q.lecture==="Killebrew Questions");
+ const homeSpecial=$("home-killebrew"),section=$("home-killebrew-section");homeSpecial.replaceChildren();
+ section.classList.toggle("hidden",!special.length);
+ if(special.length){
+  const card=document.createElement("article");card.className="lecture-card";
+  const head=document.createElement("div");head.className="lecture-head";
+  const left=document.createElement("div"),title=document.createElement("h3"),sub=document.createElement("p"),count=document.createElement("span");
+  title.textContent="Killebrew Practice Bank";sub.className="muted";
+  sub.textContent=special.filter(q=>progress[q.id]?.attempts?.length).length+" of "+special.length+" completed";
+  count.className="lecture-count";count.textContent=special.length+" questions";
+  left.append(title,sub);head.append(left,count);card.append(head);
+  const addLink=(label,list,main)=>{
+   const btn=document.createElement("button");btn.className="lecture-link"+(main?" first":"");btn.type="button";
+   const t=document.createElement("span"),n=document.createElement("small");t.textContent=label;n.textContent=list.length;
+   btn.append(t,n);btn.onclick=()=>launchQuiz(list,"Killebrew Questions — "+label,false,"home");card.append(btn);
+  };
+  addLink("All Killebrew Questions",special,true);
+  for(const topic of ["Metabolic Fuels, Fed & Fasting I & II","TCA Cycle","Gluconeogenesis","Ox Phos & Mitochondrial Function"]){
+   const group=special.filter(q=>q.section===topic);if(group.length)addLink(topic,group,false);
+  }
+  homeSpecial.append(card);
+ }
  const wrap=$("home-lectures");wrap.replaceChildren();
- const names=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort);
+ const names=[...new Set(questions.filter(q=>q.lecture!=="Killebrew Questions").map(q=>q.lecture))].sort(lectureSort);
  if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent="No questions available. Check the Google Sheet connection.";wrap.append(p);return}
  for(const name of names){
   const all=questions.filter(q=>q.lecture===name),card=document.createElement("article");card.className="lecture-card";
@@ -477,6 +514,14 @@ $("lect-all").onclick=()=>{selectedLectures=new Set(questions.map(q=>q.lecture))
 $("lect-none").onclick=()=>{selectedLectures.clear();prefs.excludedLectures=[...new Set(questions.map(q=>q.lecture))];savePrefs();setupFilters()};
 $("cat-all").onclick=()=>{selectedCats=new Set(questions.map(q=>q.category));prefs.excludedCats=[];savePrefs();setupFilters()};
 $("cat-none").onclick=()=>{selectedCats.clear();prefs.excludedCats=[...new Set(questions.map(q=>q.category))];savePrefs();setupFilters()};
+$("killebrew-custom").onchange=()=>{
+ const on=$("killebrew-custom").checked;
+ for(const [v,set,k] of [["Killebrew Questions",selectedLectures,"excludedLectures"],["Killebrew Questions",selectedCats,"excludedCats"]]){
+  if(on)set.add(v);else set.delete(v);
+  prefs[k]=[...new Set(questions.map(q=>k==="excludedLectures"?q.lecture:q.category))].filter(x=>!set.has(x));
+ }
+ savePrefs();updateMatch();
+};
 $("start").onclick=()=>launchQuiz(matches(),"Custom quiz",true,"builder");
 $("back").onclick=backToOrigin;
 $("prev").onclick=()=>{if(idx>0){idx--;render()}};
@@ -603,6 +648,16 @@ function render(){
  $("meta").textContent=q.lecture+" • "+q.category+" • "+(q.section||"")+" • "+(q.source||"")+(q.source_page?" • p. "+q.source_page:"");
  $("meta").classList.toggle("hidden",!attempted);
  renderHighlightedPrompt(q);
+ const figure=$("question-figure");figure.replaceChildren();
+ const imgPath=q.question_image_url||"";
+ const allowed=/^assets\/killebrew-[a-z0-9-]+\.png$/.test(imgPath);
+ figure.classList.toggle("hidden",!allowed);
+ if(allowed){
+  const link=document.createElement("a");link.href=imgPath;link.target="_blank";link.rel="noopener noreferrer";link.title="Open full-size question diagram";
+  const img=document.createElement("img");img.src=imgPath;img.alt="Original diagram or table for this question";img.loading="lazy";
+  link.append(img);figure.append(link);
+  const hint=document.createElement("small");hint.textContent="Select image to view full size";figure.append(hint);
+ }
  $("bookmark").textContent=progress[q.id]?.bookmark?"★ Flagged":"☆ Flag";
  $("reference").classList.toggle("hidden",!attempted||!q.reference);
  $("reference").textContent=q.reference||"";
@@ -612,7 +667,7 @@ function render(){
  $("reveal").classList.toggle("hidden",!recall||attempted);
  $("choices").replaceChildren();
  if(!recall){
-  const options=["A","B","C","D","E"].filter(k=>q[k]?.trim());
+  const options=["A","B","C","D","E","F","G","H"].filter(k=>q[k]?.trim());
   if(!sessionOptionOrders.has(q.id))sessionOptionOrders.set(q.id,$("shuffle-options").checked?shuffle(options):options);
   orderedOptions=sessionOptionOrders.get(q.id);
   orderedOptions.forEach((key,i)=>{
@@ -651,7 +706,7 @@ function render(){
 }
 // Answer keys in the Sheet use source A–E positions, but shuffle changes their displayed labels.
 function displayedLetter(q,sourceLetter){
- const order=sessionOptionOrders.get(q.id)||["A","B","C","D","E"].filter(letter=>q[letter]?.trim());
+ const order=sessionOptionOrders.get(q.id)||["A","B","C","D","E","F","G","H"].filter(letter=>q[letter]?.trim());
  const index=order.indexOf(String(sourceLetter).toUpperCase());
  return index<0?String(sourceLetter).toUpperCase():String.fromCharCode(65+index);
 }
