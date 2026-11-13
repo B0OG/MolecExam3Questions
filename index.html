@@ -404,7 +404,7 @@ function drawChecks(id,items,set,key){const wrap=$(id);wrap.replaceChildren();it
 // Grade MCQ responses against the latest answer key, not a cached Boolean from an older key.
 function answerIsCorrect(q,attempt){
  if(!attempt)return false;
- if(q.type==="mcq" && /^[A-E]$/i.test(String(attempt.answer||""))) return String(attempt.answer).toUpperCase()===q.correct;
+ if(q.type==="mcq" && /^[A-H]$/i.test(String(attempt.answer||""))) return String(attempt.answer).toUpperCase()===q.correct;
  return !!attempt.correct;
 }
 function matches(){return questions.filter(q=>selectedLectures.has(q.lecture)&&selectedCats.has(q.category)&&($("filter").value==="all"||($("filter").value==="unanswered"&&!progress[q.id]?.attempts?.length)||($("filter").value==="answered"&&!!progress[q.id]?.attempts?.length)||($("filter").value==="wrong"&&progress[q.id]?.attempts?.some(a=>!answerIsCorrect(q,a)))||($("filter").value==="bookmarked"&&progress[q.id]?.bookmark)))}
@@ -714,10 +714,10 @@ function displayedLetter(q,sourceLetter){
 // Avoid indiscriminately replacing A–E: 'A' can also be an English article.
 function displayAwareExplanation(text,q){
  return String(text||"")
-  .replace(/\b((?:correct\s+)?(?:answer|choice|option|key)(?:\s+is|\s+was)?\s*[:=]?\s*)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
-  .replace(/\b((?:selects|lists|says|supports|marks)\s+)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
-  .replace(/\b((?:2026V\d+|V\d+)\s*:\s*)([A-E])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
-  .replace(/\(([A-E])\)/g,(_,letter)=>"("+displayedLetter(q,letter)+")");
+  .replace(/\b((?:correct\s+)?(?:answer|choice|option|key)(?:\s+is|\s+was)?\s*[:=]?\s*)([A-H])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\b((?:selects|lists|says|supports|marks)\s+)([A-H])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\b((?:2026V\d+|V\d+)\s*:\s*)([A-H])\b/gi,(_,prefix,letter)=>prefix+displayedLetter(q,letter))
+  .replace(/\(([A-H])\)/g,(_,letter)=>"("+displayedLetter(q,letter)+")");
 }
 function showFeedback(q){
  const rec=progress[q.id]||{attempts:[]},last=examMode?sessionAnswers.get(q.id):(repeatAnsweredInSession?sessionAnswers.get(q.id):rec.attempts[rec.attempts.length-1]),recall=q.type==="recall";
