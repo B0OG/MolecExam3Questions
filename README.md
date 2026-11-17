@@ -10,6 +10,13 @@ Minimal lecture-organized question bank for Molecular Medicine Exam 3, supportin
 4. On GitHub navigate to **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose **main** and **/(root)**, then save.
 5. Visit your Pages URL and verify questions and progress. Test appending a new question in Google Sheets.
 
+## Courses (tabs)
+
+The home page has separate **Molecular Medicine** and **HSS** tabs. Each tab has its own questions, stats, lecture cards and custom-quiz filters; questions are never mixed between courses.
+
+- Molecular Medicine loads from the published Google Sheet CSV (`DEFAULT_CSV_URL` in `index.html`).
+- HSS loads from `hss-questions.csv` in this repository (same column layout as the Sheet). To add HSS questions, append rows to that file with new unique `HSS-...` IDs and commit.
+
 ## Updating questions
 
 Ask ChatGPT to add verified questions directly to the connected Google Sheet. Every question has an immutable ID, and the site loads the latest published CSV when opened or refreshed (Google publication updates may take a few minutes).
