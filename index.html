@@ -234,13 +234,13 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 .killebrew-custom-filter{margin:8px 0 18px;font-size:.95rem}
 .killebrew-custom-filter input{vertical-align:middle}
 #home-killebrew-section{margin-bottom:22px}
-.home-message{border:1px solid var(--accent);background:var(--soft);color:var(--text);border-radius:10px;padding:16px 18px;margin:0 0 18px;font-size:1.15rem;font-weight:700;text-align:center}
+.course-tabs{display:flex;gap:6px;margin:0 0 13px;border-bottom:1px solid var(--chrome-border)}.course-tab{border:1px solid var(--chrome-border);border-bottom:none;border-radius:9px 9px 0 0;background:var(--panel);color:var(--muted);padding:9px 20px;font-weight:700;margin-bottom:-1px;cursor:pointer}.course-tab[aria-selected="true"]{background:var(--chrome-panel);color:var(--accent);border-color:var(--accent)}body.quiz-mode .course-tabs,body.builder-mode .course-tabs{display:none}
 #question-figure{margin:10px 0 14px}
 #question-figure img{display:block;max-width:100%;max-height:220px;width:auto;height:auto;object-fit:contain;border-radius:6px;border:1px solid var(--border)}
 #question-figure a{display:inline-block;max-width:100%;text-decoration:none}
 #question-figure small{display:block;color:var(--muted);margin-top:4px}
 </style></head><body><main>
-<header><h1>Molec Exam 4 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
+<header><h1 id="site-title">Molec Exam 4 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
 <div class="line"><h2 id="auth-heading">Sign in</h2><button id="close-auth" type="button" class="push" aria-label="Close sign-in">✕</button></div>
 <p class="muted">Save your question progress privately and sync it across devices. Guest mode remains available.</p>
@@ -253,10 +253,10 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 <div class="auth-buttons"><button id="sign-in-google" type="button">Continue with Google</button><button id="reset-password" type="button">Reset password</button></div>
 <div class="auth-buttons"><button id="sign-out" type="button" class="hidden">Sign out</button></div>
 </dialog>
+<nav class="course-tabs" role="tablist" aria-label="Course"><button class="course-tab" type="button" role="tab" data-course="molec" aria-selected="true">Molecular Medicine</button><button class="course-tab" type="button" role="tab" data-course="hss" aria-selected="false">HSS</button></nav>
 <div class="stats" aria-live="polite"><div class="stat"><strong id="total">0</strong><span>Questions</span></div><div class="stat"><strong id="completed">0</strong><span>Completed</span></div><div class="stat"><strong id="accuracy">—</strong><span>First-try accuracy</span></div></div>
 <div id="notice" class="panel">Loading questions…</div>
 <section id="home-view" class="home-panel">
- <div id="home-message" class="home-message" role="status">Good job on the exam shitheads!</div>
  <div class="home-head"><div><h2>Choose a lecture</h2><p class="muted">Open a lecture or select a question category.</p></div><button class="primary" id="home-builder" type="button">Custom quiz</button></div>
  <section id="home-killebrew-section" class="hidden" aria-label="Killebrew Questions">
   <div class="home-head"><div><h2>Killebrew Questions</h2><p class="muted">Faculty-provided practice questions, organized separately from lectures.</p></div></div>
@@ -394,9 +394,18 @@ function validate(list){
 }
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const sourceUrl=()=>localStorage.getItem("molec-exam4-csv-url")||DEFAULT_CSV_URL;
-async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="Exam 4 questions are coming soon.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}questions=validate(data);$("notice").textContent=message;setupFilters();updateStats();buildHome()}
-const LECTURE_ORDER=[]; // Exam 4 lecture order — add lecture names here as they are published
-const CATEGORY_ORDER=["Intro Questions (AI)","Exam Style Questions (AI)","USMLE Style (AI)","Bits Questions","Faculty Questions","Intro Questions","USMLE AI Questions"];
+// Courses are kept fully separate: each tab has its own question bank, home cards, stats and custom-quiz filters.
+const HSS_CSV_URL="hss-questions.csv"; // HSS bank lives in this repo, not the Molec Google Sheet
+const COURSES={molec:{title:"Molec Exam 4 Questions"},hss:{title:"HSS Exam Questions"}};
+let course=prefs.course==="hss"?"hss":"molec";const bank={molec:[],hss:[]},notices={molec:"Loading questions…",hss:"Loading questions…"};
+function applyCourse(){questions=bank[course];document.title=COURSES[course].title;$("site-title").textContent=COURSES[course].title;document.querySelectorAll(".course-tab").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.course===course)));$("notice").textContent=notices[course];setupFilters();updateStats()}
+function switchCourse(next){if(next===course||!COURSES[next])return;prefs.courseFilters=prefs.courseFilters||{};prefs.courseFilters[course]={filtersInitialized:prefs.filtersInitialized,excludedLectures:prefs.excludedLectures,excludedCats:prefs.excludedCats};const saved=prefs.courseFilters[next]||{};prefs.filtersInitialized=saved.filtersInitialized;prefs.excludedLectures=saved.excludedLectures;prefs.excludedCats=saved.excludedCats;selectedLectures=new Set();selectedCats=new Set();course=next;prefs.course=next;savePrefs();applyCourse()}
+document.querySelectorAll(".course-tab").forEach(b=>b.onclick=()=>switchCourse(b.dataset.course));
+async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="Exam 4 questions are coming soon.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}bank.molec=validate(data);notices.molec=message;
+ let hssData=[],hssMessage="HSS question bank loaded.";try{const res=await fetch(HSS_CSV_URL,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);hssData=parseCSV(await res.text())}catch(e){hssMessage="Could not load the HSS question bank ("+e.message+")."}
+ bank.hss=validate(hssData);notices.hss=hssMessage;applyCourse()}
+const LECTURE_ORDER=["Introduction to EBM","Introduction to Research","Biostatistics I","Biostatistics II","Quintuple Aim","Healthcare System Structure & Process"]; // HSS order; add Exam 4 Molec lecture names here as they are published
+const CATEGORY_ORDER=["Content Questions (AI)","Intro Questions (AI)","Exam Style Questions (AI)","USMLE Style (AI)","Bits Questions","Faculty Questions","Intro Questions","USMLE AI Questions"];
 const lectureSort=(a,b)=>{const ia=LECTURE_ORDER.indexOf(a),ib=LECTURE_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
 const categorySort=(a,b)=>{const ia=CATEGORY_ORDER.indexOf(a),ib=CATEGORY_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
 function setupFilters(){const allLect=[...new Set(questions.map(q=>q.lecture))].sort(lectureSort),allCats=[...new Set(questions.map(q=>q.category))].sort(categorySort);const initialize=()=>{selectedLectures=new Set(allLect);selectedCats=new Set(allCats)};if(!prefs.filtersInitialized){initialize();prefs.filtersInitialized=true;savePrefs()}else{const oldLect=new Set(selectedLectures),oldCats=new Set(selectedCats);allLect.forEach(l=>{if(!oldLect.has(l)&&!prefs.excludedLectures?.includes(l))selectedLectures.add(l)});allCats.forEach(c=>{if(!oldCats.has(c)&&!prefs.excludedCats?.includes(c))selectedCats.add(c)});selectedLectures=new Set([...selectedLectures].filter(l=>allLect.includes(l)));selectedCats=new Set([...selectedCats].filter(c=>allCats.includes(c)))}drawChecks("lectures",allLect.filter(l=>l!=="Killebrew Questions"),selectedLectures,"excludedLectures");
@@ -437,7 +446,7 @@ function buildHome(){
  }
  const wrap=$("home-lectures");wrap.replaceChildren();
  const names=[...new Set(questions.filter(q=>q.lecture!=="Killebrew Questions").map(q=>q.lecture))].sort(lectureSort);
- if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent=sourceUrl()?"No questions available. Check the Google Sheet connection.":"No Exam 4 questions yet — check back soon.";wrap.append(p);return}
+ if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent=course==="hss"?"No HSS questions available.":sourceUrl()?"No questions available. Check the Google Sheet connection.":"No Exam 4 questions yet — check back soon.";wrap.append(p);return}
  for(const name of names){
   const all=questions.filter(q=>q.lecture===name),card=document.createElement("article");card.className="lecture-card";
   const head=document.createElement("div");head.className="lecture-head";
