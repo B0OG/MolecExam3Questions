@@ -12,10 +12,11 @@ Minimal lecture-organized question bank for Molecular Medicine Exam 3, supportin
 
 ## Courses (tabs)
 
-The home page has separate **Molecular Medicine** and **HSS** tabs. Each tab has its own questions, stats, lecture cards and custom-quiz filters; questions are never mixed between courses.
+The home page has separate **Molecular Medicine**, **HSS** and **PCS** tabs. Each tab has its own questions, stats, lecture cards and custom-quiz filters; questions are never mixed between courses.
 
 - Molecular Medicine loads from the published Google Sheet CSV (`DEFAULT_CSV_URL` in `index.html`).
 - HSS loads from `hss-questions.csv` in this repository (same column layout as the Sheet). To add HSS questions, append rows to that file with new unique `HSS-...` IDs and commit.
+- PCS loads from `pcs-questions.csv` in this repository (same layout). To add PCS questions, append rows with new unique `PCS-...` IDs and commit. Courses are configured in the `COURSES` object in `index.html`; a course with a `csv` entry loads from that repo file.
 
 ## Updating questions
 
