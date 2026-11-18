@@ -495,7 +495,7 @@ function fitQuestion(){
  if(!document.body.classList.contains("quiz-mode"))return;
  const area=$("question-content");if(!area.clientHeight)return;
  area.style.setProperty("--fit-scale","1");
- for(let z=1;z>0.70&&area.scrollHeight>area.clientHeight+3;z-=0.04)area.style.setProperty("--fit-scale",String(Math.max(.70,z-.04)));
+ // Keep the font at full size; long questions and explanations scroll instead of shrinking.
  area.scrollTop=0;
 }
 window.addEventListener("resize",()=>requestAnimationFrame(fitQuestion));
