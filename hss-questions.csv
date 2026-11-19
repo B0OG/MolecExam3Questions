@@ -83,3 +83,183 @@ HSS-HCS-20261116-012,Healthcare System Structure & Process,Content Questions (AI
 HSS-HCS-20261116-013,Healthcare System Structure & Process,Content Questions (AI),AI-generated — Content (Payne 2026),How does Medicaid differ from Medicare?,Medicaid is federal only and identical nationwide,Medicaid covers only military families,Medicaid is a federal-state program that varies by state,Medicaid is private commercial insurance,Medicaid is run entirely by CMS with no state role,C,"Medicare = federal, essentially the same everywhere, run by CMS. Medicaid = federal-state program run by state/local governments within federal guidelines, so it varies by state. Tricare covers the military. Reference: Intro to Healthcare System (Payne), slides 21-22.",active,1,2026-11-16,mcq,,LO3 | Content,"Intro to Healthcare System (Payne), slides 21-22",,21-22,,,,
 HSS-HCS-20261116-014,Healthcare System Structure & Process,Content Questions (AI),AI-generated — Content (Payne 2026),"Which plan lets patients see out-of-network providers at a higher cost, without a referral from their primary provider?",Medicare Part A,PPO,ACO,Tricare for Life,HMO,B,"PPO = out-of-network allowed at higher expense, referral not through the PCP. HMO = in-network only, referrals through the PCP. Reference: Intro to Healthcare System (Payne), slide 25.",active,1,2026-11-16,mcq,,LO3 | Content,"Intro to Healthcare System (Payne), slide 25",,25,,,,
 HSS-HCS-20261116-015,Healthcare System Structure & Process,Content Questions (AI),AI-generated — Content (Payne 2026),What was the stated goal of the HITECH Act of 2009?,Improve outcomes by reducing errors from poor handwriting and documentation through EHRs,Eliminate private insurance,Expand Medicaid to 138% of the poverty line,Require hospitals to employ hospitalists,Create Medicare Part D,A,"HITECH mandated the switch from paper charts to EHRs to reduce errors from poor handwriting/documentation. Handwriting improved, but better outcomes are not confirmed, and it was very costly. Reference: Intro to Healthcare System (Payne), slide 29.",active,1,2026-11-16,mcq,,LO5 | Content,"Intro to Healthcare System (Payne), slide 29",,29,,,,
+HSS-BS1-20261119-001,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"A researcher surveys 200 patients about their satisfaction with osteopathic manipulative treatment. Response options are strongly disagree, disagree, agree, and strongly agree. Which level of measurement best describes this variable?",Nominal,Interval,Ordinal,Ratio,Continuous,C,"Likert responses are ranked categories, which makes the variable ordinal. Nominal categories have no order. Interval and ratio variables are continuous, with equal distances between values.
+
+Why the other choices are wrong:
+• Nominal: Nominal categories have no order; Likert responses are ranked.
+• Interval: Interval data are continuous with equal spacing; Likert categories are not.
+• Ratio: Ratio data are continuous with a true zero; not ranked categories.
+• Continuous: Continuous data take any value; Likert has four ranked categories.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-002,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"A cohort study examines whether smoking is associated with lung cancer. The investigators also collect age, sex, diet, and family history so they can isolate the effect of smoking. Which option correctly classifies the variables?","Independent: lung cancer; dependent: smoking; control: age, sex, diet, family history",Independent: age and sex; dependent: smoking; control: lung cancer,Independent: smoking; dependent: family history; control: lung cancer,"Independent: smoking; dependent: lung cancer; control: age, sex, diet, family history",Independent: smoking and lung cancer; dependent: age; control: diet,D,"The independent (exposure) variable explains or predicts the outcome, so it is smoking. The dependent (outcome) variable is lung cancer. Age, sex, diet, and family history are control variables, which may also affect the outcome and are included to isolate the effect of smoking.
+
+Why the other choices are wrong:
+• Independent: lung cancer; dependent: smoking; control: age, sex, diet, family history: Reverses exposure and outcome; smoking is the exposure.
+• Independent: age and sex; dependent: smoking; control: lung cancer: Age and sex are controls, and smoking is the exposure, not outcome.
+• Independent: smoking; dependent: family history; control: lung cancer: Family history is a control variable, not the outcome.
+• Independent: smoking and lung cancer; dependent: age; control: diet: Smoking and lung cancer are exposure and outcome, not both independent.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-003,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Hospital length of stay for seven patients is 2, 3, 3, 4, 5, 6, and 40 days. Which measure of central tendency is most appropriate for these data, and what is its value?","Mean, 9 days","Median, 4 days","Mode, 3 days","Median, 3 days","Mean, 4 days",B,"The value of 40 days is an outlier. It pulls the mean up to 9 days (63 / 7) but does not affect the median. The median is the middle value of the ordered list, which is 4 days.
+
+Why the other choices are wrong:
+• Mean, 9 days: Mean is pulled up to 9 by the 40-day outlier.
+• Mode, 3 days: Mode is the most frequent value, not the best summary here.
+• Median, 3 days: The middle of seven ordered values is 4, not 3.
+• Mean, 4 days: The mean is 9 days (63/7), not 4.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-004,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"The number of clinic visits in one year for eight patients is 2, 4, 6, 8, 10, 12, 14, and 16. What is the interquartile range?",4,6,8,13,14,C,"The median (Q2) is 9, which splits the data into two halves. Q1 is the median of the lower half (2, 4, 6, 8), which is 5. Q3 is the median of the upper half (10, 12, 14, 16), which is 13. IQR = Q3 - Q1 = 13 - 5 = 8. The range is 14.
+
+Why the other choices are wrong:
+• 4: 4 is not Q3 - Q1 for these data.
+• 6: 6 is not Q3 - Q1; Q1 = 5 and Q3 = 13.
+• 13: 13 is Q3 itself, not the IQR.
+• 14: 14 is the range (16 - 2), not the IQR.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-005,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Serum triglyceride levels in a clinic population have a mean of 210 mg/dL, a median of 150 mg/dL, and a mode of 130 mg/dL. Which statement best describes this distribution?","Positively skewed, with a tail to the right","Negatively skewed, with a tail to the left",Perfectly normal,"Negatively skewed, with a tail to the right",Symmetrical around the mean,A,"The mean is greater than the median and mode, which indicates positive skew. A few very high values stretch the tail to the right and pull the mean toward them. In a perfectly normal distribution, mean = median = mode.
+
+Why the other choices are wrong:
+• Negatively skewed, with a tail to the left: Negative skew has mean below median; here mean is highest.
+• Perfectly normal: Normal requires mean = median = mode; these differ.
+• Negatively skewed, with a tail to the right: Negative skew has a left tail, not a right one.
+• Symmetrical around the mean: Symmetry requires equal mean and median.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-006,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),Hospital costs in a population are strongly right-skewed. Investigators repeatedly draw random samples of 100 patients and record the mean cost for each sample. Which statement best describes the distribution of these sample means?,"Right-skewed, like the population","Left-skewed, opposite to the population",Binomial,"Approximately normal, with a mean equal to the population mean",Approximately normal only if the population itself is normal,D,"By the Central Limit Theorem, the sampling distribution of sample means is approximately normal when the sample size is large (more than 30), regardless of the shape of the population distribution. Its mean equals the population mean.
+
+Why the other choices are wrong:
+• Right-skewed, like the population: Means of large samples lose the population skew (CLT).
+• Left-skewed, opposite to the population: Sampling distribution does not flip skew direction.
+• Binomial: Binomial describes counts of successes, not sample means.
+• Approximately normal only if the population itself is normal: CLT applies regardless of population shape when n is large.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-007,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),LDL cholesterol in a population has a standard deviation of 30 mg/dL. A random sample of 225 adults is drawn. What is the standard error of the sample mean?,0.13 mg/dL,0.5 mg/dL,1 mg/dL,1.5 mg/dL,2 mg/dL,E,"The standard error is the population standard deviation divided by the square root of the sample size: 30 / √225 = 30 / 15 = 2 mg/dL.
+
+Why the other choices are wrong:
+• 0.13 mg/dL: 0.13 is SD divided by n (30/225), not by √n.
+• 0.5 mg/dL: 0.5 does not follow from 30/√225.
+• 1 mg/dL: 1 does not follow from 30/√225.
+• 1.5 mg/dL: 1.5 does not follow from 30/√225.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-008,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"A cohort study reports that the relative risk of myocardial infarction among users of a new drug, compared with nonusers, is 1.4 (95% CI: 0.9 to 2.1). Which interpretation is correct?","Not statistically significant, because the confidence interval includes 1","Statistically significant, because the relative risk is greater than 1","Not statistically significant, because the confidence interval does not include 0","Statistically significant, because the confidence interval excludes 0",95% of users have a relative risk between 0.9 and 2.1,A,"For relative risks and odds ratios, a 95% CI that includes 1 means the risk in exposed and unexposed groups could be equal in the population, so the result is not statistically significant. The value 0 is the reference for mean differences, not for ratios.
+
+Why the other choices are wrong:
+• Statistically significant, because the relative risk is greater than 1: An RR above 1 is not significant if the CI includes 1.
+• Not statistically significant, because the confidence interval does not include 0: 0 is the null value for mean differences, not ratios.
+• Statistically significant, because the confidence interval excludes 0: For ratios, significance depends on excluding 1, not 0.
+• 95% of users have a relative risk between 0.9 and 2.1: A CI describes the population estimate, not individual patients.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-009,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"A small trial finds no statistically significant difference in LDL between simvastatin and placebo (p = 0.20). Several later, larger trials show that simvastatin does lower LDL. What best describes the conclusion of the first trial?",Type I error (false positive),Type II error (false negative),Correct rejection of the null hypothesis,Correct failure to reject the null hypothesis,Acceptance of the alternate hypothesis,B,"The first trial failed to reject the null hypothesis when the null was false. That is a type II (β) error, or false negative. A type I (α) error is rejecting a true null hypothesis. Power is 1 - β, so small, underpowered studies are more prone to type II errors.
+
+Why the other choices are wrong:
+• Type I error (false positive): Type I error is rejecting a true null; this trial failed to reject.
+• Correct rejection of the null hypothesis: The trial did not reject the null at all.
+• Correct failure to reject the null hypothesis: Failing to reject was wrong, since the null was false.
+• Acceptance of the alternate hypothesis: The trial did not support the alternate hypothesis.
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS1-20261119-010,Biostatistics I,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"A trial with 5,000 patients per arm finds that a new antihypertensive lowers systolic blood pressure by 1 mm Hg more than placebo (95% CI: 0.4 to 1.6; p = 0.001). Which conclusion is most appropriate?",The result is neither statistically nor clinically significant,The result is clinically significant but not statistically significant,The result is statistically significant but probably not clinically significant,A type II error has occurred,The null hypothesis should be accepted,C,"The p-value is below 0.05 and the confidence interval for the mean difference excludes 0, so the result is statistically significant. A 1 mm Hg reduction is too small to matter for patients, so it is unlikely to be clinically significant.
+
+Why the other choices are wrong:
+• The result is neither statistically nor clinically significant: p = 0.001 and CI excluding 0 make it statistically significant.
+• The result is clinically significant but not statistically significant: Reversed: statistically significant, but too small to matter clinically.
+• A type II error has occurred: Type II error is missing a true effect; an effect was found.
+• The null hypothesis should be accepted: The null was rejected, and a null is never ""accepted.""
+
+Ref: Biostatistics 1 (Garg)",active,1,2026-11-19,mcq,,"Part 1 | Data, distributions, inference",Biostatistics 1 (Garg),,,,,,
+HSS-BS2-20261119-001,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),A cross-sectional study compares mean systolic blood pressure between 300 night-shift nurses and 300 day-shift nurses. Blood pressure is normally distributed. Which test is most appropriate?,Paired t-test,Two-sample (independent groups) t-test,Chi-square test,One-way ANOVA,Pearson correlation,B,"The outcome is continuous and normally distributed, and there are two independent groups. That calls for a two-sample t-test. A paired t-test needs repeated measures on the same people, and ANOVA is for three or more groups.
+
+Why the other choices are wrong:
+• Paired t-test: Paired t-test needs repeated measures on the same people.
+• Chi-square test: Chi-square compares categorical variables, not means.
+• One-way ANOVA: One-way ANOVA is for three or more groups.
+• Pearson correlation: Pearson correlation measures association between two continuous variables.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-002,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),Forty patients with obesity are weighed before and after a 12-week exercise program. The data are normally distributed. Which test best determines whether mean weight changed?,Two-sample (independent groups) t-test,Chi-square test,One-way ANOVA,Paired t-test,Kruskal-Wallis test,D,"The same patients are measured twice, so the observations are dependent (paired). The paired t-test compares the baseline and post-treatment means while accounting for the correlation between the two measurements.
+
+Why the other choices are wrong:
+• Two-sample (independent groups) t-test: Independent-groups t-test ignores that the same patients were measured twice.
+• Chi-square test: Chi-square is for categorical data, not continuous weights.
+• One-way ANOVA: ANOVA compares three or more independent groups.
+• Kruskal-Wallis test: Kruskal-Wallis is nonparametric for three or more independent groups.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-003,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Patients with type 2 diabetes are randomized to exercise, diet, or usual care. Mean A1C at six months is compared across the three groups, and A1C is normally distributed. Which test is most appropriate?",One-way ANOVA,Two-sample t-test,Chi-square test,Paired t-test,Spearman rank correlation,A,"The outcome is continuous and normally distributed, and there are three independent groups, so one-way ANOVA is used. If ANOVA is significant, a post hoc test such as Tukey's test identifies which groups differ.
+
+Why the other choices are wrong:
+• Two-sample t-test: Two-sample t-test compares only two groups.
+• Chi-square test: Chi-square is for categorical outcomes, not mean A1C.
+• Paired t-test: Paired t-test needs repeated measures on the same patients.
+• Spearman rank correlation: Spearman measures correlation, not differences among group means.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-004,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Among 400 adults, investigators compare the proportion who developed influenza (yes or no) between those who were vaccinated and those who were not. Which test is most appropriate?",Two-sample t-test,One-way ANOVA,Pearson correlation,Paired t-test,Chi-square test,E,"Both the exposure (vaccinated or not) and the outcome (influenza or not) are categorical, and the comparison is between proportions. The chi-square test assesses association between two categorical variables. Fisher's exact test is the alternative for small samples.
+
+Why the other choices are wrong:
+• Two-sample t-test: Two-sample t-test compares means of a continuous outcome.
+• One-way ANOVA: ANOVA compares means across three or more groups.
+• Pearson correlation: Pearson correlation needs two continuous variables.
+• Paired t-test: Paired t-test needs repeated continuous measures on the same people.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-005,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),Postoperative pain is rated on a 0 to 10 scale in two independent groups of 12 patients each: one receiving OMT and one receiving standard care. The scores are skewed. Which test is most appropriate?,Two-sample t-test,Paired t-test,Wilcoxon-Mann-Whitney U test,Kruskal-Wallis test,One-way ANOVA,C,"Pain scores are ordinal, the data are skewed, and the sample is small, so a nonparametric test is needed. With two independent groups, that is the Wilcoxon-Mann-Whitney U test. Kruskal-Wallis is for more than two groups.
+
+Why the other choices are wrong:
+• Two-sample t-test: Two-sample t-test assumes normal data; these are skewed and ordinal.
+• Paired t-test: Groups are independent, not paired measurements.
+• Kruskal-Wallis test: Kruskal-Wallis is for three or more groups.
+• One-way ANOVA: ANOVA is parametric and for three or more groups.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-006,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Length of hospital stay is compared among patients receiving one of three antibiotic regimens. The data are markedly right-skewed, with outliers that cannot be removed. Which test is most appropriate?",One-way ANOVA,Wilcoxon-Mann-Whitney U test,Two-sample t-test,Kruskal-Wallis test,Pearson correlation,D,"The outcome is continuous but skewed with outliers, so the median represents the data better than the mean and a nonparametric test is appropriate. With three groups, the Kruskal-Wallis test is the nonparametric counterpart of one-way ANOVA.
+
+Why the other choices are wrong:
+• One-way ANOVA: ANOVA assumes normally distributed data; these are skewed.
+• Wilcoxon-Mann-Whitney U test: Mann-Whitney U compares only two groups.
+• Two-sample t-test: Two-sample t-test is parametric and for two groups.
+• Pearson correlation: Pearson measures correlation, not group differences.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-007,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"In 10 patients with diabetes, the Pearson correlation between weekly minutes of exercise and A1C is r = -0.72 (p = 0.019). Which interpretation is best?",Exercise causes A1C to fall,"There is a statistically significant negative linear relationship: as exercise increases, A1C tends to decrease","The result is not statistically significant, because r is negative",72% of the patients lowered their A1C through exercise,There is no linear relationship between exercise and A1C,B,"A negative r means that as one variable increases, the other decreases. Because p is less than 0.05, the null hypothesis of no linear relationship is rejected. Correlation does not establish causation, so the first option overstates the finding.
+
+Why the other choices are wrong:
+• Exercise causes A1C to fall: Correlation does not establish causation.
+• The result is not statistically significant, because r is negative: Significance depends on p, not the sign of r.
+• 72% of the patients lowered their A1C through exercise: r is not a percentage of patients.
+• There is no linear relationship between exercise and A1C: p = 0.019 rejects the null of no linear relationship.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-008,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Investigators want to measure the strength of association between a pain score ranked on an ordinal scale and the number of pharmacy visits, which is skewed by several outliers. Which statistic is most appropriate?",Spearman rank correlation,Pearson correlation,Two-sample t-test,Chi-square test,One-way ANOVA,A,"Spearman rank correlation is used when the data are ranked (ordinal) or when continuous data are skewed by outliers. Pearson correlation requires two normally distributed continuous variables.
+
+Why the other choices are wrong:
+• Pearson correlation: Pearson requires two normally distributed continuous variables.
+• Two-sample t-test: A t-test compares means, not strength of association.
+• Chi-square test: Chi-square is for two categorical variables.
+• One-way ANOVA: ANOVA compares group means, not association strength.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-009,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Researchers want to assess the association between smoking and systolic blood pressure while adjusting for age, sex, diet, and exercise. Which approach is most appropriate?",Chi-square test,Two-sample t-test,Pearson correlation,Paired t-test,Multivariate regression analysis,E,"Adjusting for several other factors at once requires multivariate regression. Bivariate tests such as the t-test, chi-square test, and correlation analyze only two variables and cannot account for confounders.
+
+Why the other choices are wrong:
+• Chi-square test: Chi-square is bivariate and cannot adjust for confounders.
+• Two-sample t-test: A t-test compares two group means without adjustment.
+• Pearson correlation: Pearson correlation analyzes only two variables.
+• Paired t-test: Paired t-test compares repeated measures, not adjusted associations.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
+HSS-BS2-20261119-010,Biostatistics II,Practice Questions,Uploaded practice set — Distributions & Statistical Tests (2026),"Before starting a study, researchers set α at 0.01. The statistical test returns p = 0.03. Which conclusion is correct?","Reject the null hypothesis, because p is less than 0.05",Accept the null hypothesis,Fail to reject the null hypothesis; the result is not statistically significant,"Reject the null hypothesis, because p is greater than α",The study has 97% power,C,"A result is statistically significant only when the p-value is less than the pre-determined α. Here 0.03 is greater than 0.01, so the researchers fail to reject the null hypothesis. The null hypothesis is never accepted; it is either rejected or not rejected.
+
+Why the other choices are wrong:
+• Reject the null hypothesis, because p is less than 0.05: The comparison is to α = 0.01, not 0.05.
+• Accept the null hypothesis: A null hypothesis is never accepted, only not rejected.
+• Reject the null hypothesis, because p is greater than α: Rejection requires p less than α, not greater.
+• The study has 97% power: Power is 1 - β and is not derived from the p-value.
+
+Ref: Biostatistics 2 (Garg)",active,1,2026-11-19,mcq,,Part 2 | Choosing statistical tests,Biostatistics 2 (Garg),,,,,,
