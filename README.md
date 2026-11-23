@@ -1,36 +1,29 @@
 # MolecExam3 Questions
 
-Minimal lecture-organized question bank for Molecular Medicine Exam 3, supporting multiple-choice and fill-in-the-blank recall.
+Minimal lecture-organized question bank for Molecular Medicine **Exam 5**, supporting multiple-choice and fill-in-the-blank recall. (The repository name still says Exam 3; the site now serves Exam 5 only.)
 
 ## One-time setup
 
 1. Open the [master Google Sheet](https://docs.google.com/spreadsheets/d/13fqa2rBEcpVLRnJQvZAXbMMwyqkjz2NflTG3HeN15PI/edit).
-2. In Google Sheets choose **File → Share → Publish to web**. Select the **Questions** tab, select **Comma-separated values (.csv)** and click Publish. Copy the generated CSV URL.
-3. The site's built-in Google Sheets CSV source has been configured in `index.html` (Nov 3, 2026). Refreshing the site loads the current published questions.
+2. In Google Sheets choose **File → Share → Publish to web**. The whole document is published, so each tab is reachable as CSV by its `gid`.
+3. The site's built-in Google Sheets CSV source is configured in `index.html` (`DEFAULT_CSV_URL`, repointed to the **Exam 5 Questions** tab on Nov 23, 2026). Refreshing the site loads the current published questions.
 4. On GitHub navigate to **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose **main** and **/(root)**, then save.
 5. Visit your Pages URL and verify questions and progress. Test appending a new question in Google Sheets.
 
-## Courses (tabs)
+## Scope
 
-The home page has separate **Molecular Medicine**, **HSS**, **PCS** and **OPP** tabs. Each tab has its own questions, stats, lecture cards and custom-quiz filters; questions are never mixed between courses.
-
-- Molecular Medicine loads from the published Google Sheet CSV (`DEFAULT_CSV_URL` in `index.html`).
-- HSS loads from `hss-questions.csv` in this repository (same column layout as the Sheet). To add HSS questions, append rows to that file with new unique `HSS-...` IDs and commit.
-- PCS loads from `pcs-questions.csv` in this repository (same layout). To add PCS questions, append rows with new unique `PCS-...` IDs and commit.
-- OPP loads from `opp-questions.csv` in this repository (same layout). Lectures: Innominate & Pelvis, Lumbar Spine, Osteopathic Concepts & Techniques; categories `PIAT Questions` (faculty PIAT, `OPP-PIAT-##`) and `Exam Style Questions (AI)` (`OPP-<INN|LUM|CON>-<YYYYMMDD>-###`).
-
-Courses are configured in the `COURSES` object in `index.html`; a course with a `csv` entry loads from that repo file.
+The site serves **Exam 5 Molecular Medicine questions only**. The HSS, PCS and OPP course tabs and their CSV files were removed on Nov 23, 2026, and the Exam 3 and Exam 4 banks are retired (their published-CSV URLs are kept as comments in `index.html`). Progress for retired questions stays in localStorage keyed by question ID; it is simply not shown.
 
 ## Updating questions
 
-Ask ChatGPT to add verified questions directly to the connected Google Sheet. Every question has an immutable ID, and the site loads the latest published CSV when opened or refreshed (Google publication updates may take a few minutes).
+Add verified questions directly to the connected Google Sheet (the `Exam 5 Questions` tab). Every question has an immutable ID, and the site loads the latest published CSV when opened or refreshed (Google publication updates may take a few minutes).
 
 Columns: `id, lecture, category, source, question, A, B, C, D, E, correct, explanation, status, version, updated_at, type, answer, section, reference, faculty_key_note, source_page`.
 
 - `type=mcq`: use original question choices (two to five choices), and `correct` is the letter of the answer.
 - `type=recall`: keep the original fill-in-the-blank stem and put faculty-key answers in `answer`; no answer options or `correct` letter needed. The student reveals the answer, then self-marks correct or missed.
-- The `Lectures` tab is the human-readable catalog. The website sidebar currently lists Metabolic Fuels ILA, Human Microbiome, Introduction to Bacteriology and Clinical Bacteriology, plus new lecture names detected from question rows.
-- As of November 3, 2026, six demo questions were replaced by 29 faculty Metabolic Fuels Bits questions (22 recall and 7 application MCQs). Two faculty answer-key inconsistencies are annotated in `faculty_key_note`, with lecture-supported answer letters.
+- The `Lectures` tab is the human-readable catalog. `LECTURE_ORDER` in `index.html` sets the display order; any lecture not listed there is sorted alphabetically after the listed ones.
+- Exam 5 (Nov 23, 2026): Basic Principles of Antimicrobial Therapy, Extracellular Matrix ILA, Developmental Genetics ILA and Inflammation ILA, with `Intro Questions (AI)`, `Exam Style Questions (AI)` and faculty `Bits Questions`.
 
 Question types/categories are discovered from the Sheet automatically. Keep IDs unchanged when revising existing questions to preserve progress. Use `status=inactive` to hide withdrawn questions.
 

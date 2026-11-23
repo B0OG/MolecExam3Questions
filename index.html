@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Molec Exam 4 Questions</title>
+<title>Molec Exam 5 Questions</title>
 <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml"><link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <style>
 :root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--text:#171b24;--muted:#637083;--border:#dce0e7;--accent:#2563eb;--soft:#eff6ff;--good:#146f4a;--bad:#b42336}
@@ -236,13 +236,13 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 .killebrew-custom-filter{margin:8px 0 18px;font-size:.95rem}
 .killebrew-custom-filter input{vertical-align:middle}
 #home-killebrew-section{margin-bottom:22px}
-.course-tabs{display:flex;gap:6px;margin:0 0 13px;border-bottom:1px solid var(--chrome-border)}.course-tab{border:1px solid var(--chrome-border);border-bottom:none;border-radius:9px 9px 0 0;background:var(--panel);color:var(--muted);padding:9px 20px;font-weight:700;margin-bottom:-1px;cursor:pointer}.course-tab[aria-selected="true"]{background:var(--chrome-panel);color:var(--accent);border-color:var(--accent)}body.quiz-mode .course-tabs,body.builder-mode .course-tabs{display:none}
+
 #question-figure{margin:10px 0 14px}
 #question-figure img{display:block;max-width:100%;max-height:220px;width:auto;height:auto;object-fit:contain;border-radius:6px;border:1px solid var(--border)}
 #question-figure a{display:inline-block;max-width:100%;text-decoration:none}
 #question-figure small{display:block;color:var(--muted);margin-top:4px}
 </style></head><body><main>
-<header><h1 id="site-title">Molec Exam 4 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
+<header><h1 id="site-title">Molec Exam 5 Questions</h1><div class="auth-actions"><span id="account-status" class="auth-indicator">Guest · Progress on this device</span><button id="account-button" type="button">Sign in</button><button id="theme" aria-label="Toggle dark mode">◐ Dark mode</button></div></header>
 <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-heading">
 <div class="line"><h2 id="auth-heading">Sign in</h2><button id="close-auth" type="button" class="push" aria-label="Close sign-in">✕</button></div>
 <p class="muted">Save your question progress privately and sync it across devices. Guest mode remains available.</p>
@@ -255,7 +255,7 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 <div class="auth-buttons"><button id="sign-in-google" type="button">Continue with Google</button><button id="reset-password" type="button">Reset password</button></div>
 <div class="auth-buttons"><button id="sign-out" type="button" class="hidden">Sign out</button></div>
 </dialog>
-<nav class="course-tabs" role="tablist" aria-label="Course"><button class="course-tab" type="button" role="tab" data-course="molec" aria-selected="true">Molecular Medicine</button><button class="course-tab" type="button" role="tab" data-course="hss" aria-selected="false">HSS</button><button class="course-tab" type="button" role="tab" data-course="pcs" aria-selected="false">PCS</button><button class="course-tab" type="button" role="tab" data-course="opp" aria-selected="false">OPP</button></nav>
+
 <div class="stats" aria-live="polite"><div class="stat"><strong id="total">0</strong><span>Questions</span></div><div class="stat"><strong id="completed">0</strong><span>Completed</span></div><div class="stat"><strong id="accuracy">—</strong><span>First-try accuracy</span></div></div>
 <div id="notice" class="panel">Loading questions…</div>
 <section id="home-view" class="home-panel">
@@ -330,8 +330,9 @@ body.exam-review-mode #app-shell.app-shell,body.exam-result-mode #app-shell.app-
 "use strict";
 const SAMPLE=[];
 const $=id=>document.getElementById(id),STORE="molec-exam3-progress-v1",PREF="molec-exam3-preferences-v1";
-const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?gid=1779789318&single=true&output=csv"; // Exam 4 bank: "Exam 4 Questions" tab of the master Sheet (published 2026-11-16)
-// Exam 3 bank (retired 2026-11-16): https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?output=csv
+const DEFAULT_CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQVqt-wLkyzUM4wu0OKWvWxTu6w0oxGnbKKD2BrjeEG9XImyofoY7eRk_gm2qsGqhvcVUGiNAktGvWL/pub?gid=505393799&single=true&output=csv"; // Exam 5 bank: "Exam 5 Questions" tab of the master Sheet (published 2026-11-23)
+// Retired banks: Exam 3 (2026-11-16) ...pub?output=csv ; Exam 4 (2026-11-23) ...pub?gid=1779789318&single=true&output=csv
+// HSS, PCS and OPP banks were removed from this site on 2026-11-23; their CSVs remain in the repo history.
 let questions=[],progress={},prefs={},session=[],idx=0,draft=null,orderedOptions=[],selectedLectures=new Set(),selectedCats=new Set(),activeUid=null;
 let repeatAnsweredInSession=false;
 const sessionAnswers=new Map(),sessionOptionOrders=new Map(),sessionCrossouts=new Map(),sessionHighlights=new Map();
@@ -395,18 +396,15 @@ function validate(list){
  });
 }
 function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-const sourceUrl=()=>localStorage.getItem("molec-exam4-csv-url")||DEFAULT_CSV_URL;
+const sourceUrl=()=>localStorage.getItem("molec-exam5-csv-url")||DEFAULT_CSV_URL;
 // Courses are kept fully separate: each tab has its own question bank, home cards, stats and custom-quiz filters.
-// HSS and PCS banks live in this repo as CSV files, not in the Molec Google Sheet
-const COURSES={molec:{title:"Molec Exam 4 Questions"},hss:{title:"HSS Exam Questions",label:"HSS",csv:"hss-questions.csv"},pcs:{title:"PCS Exam Questions",label:"PCS",csv:"pcs-questions.csv"},opp:{title:"OPP Exam Questions",label:"OPP",csv:"opp-questions.csv"}};
-let course=COURSES[prefs.course]?prefs.course:"molec";const bank={molec:[],hss:[],pcs:[],opp:[]},notices={molec:"Loading questions…",hss:"Loading questions…",pcs:"Loading questions…",opp:"Loading questions…"};
-function applyCourse(){questions=bank[course];document.title=COURSES[course].title;$("site-title").textContent=COURSES[course].title;document.querySelectorAll(".course-tab").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.course===course)));$("notice").textContent=notices[course];setupFilters();updateStats()}
-function switchCourse(next){if(next===course||!COURSES[next])return;prefs.courseFilters=prefs.courseFilters||{};prefs.courseFilters[course]={filtersInitialized:prefs.filtersInitialized,excludedLectures:prefs.excludedLectures,excludedCats:prefs.excludedCats};const saved=prefs.courseFilters[next]||{};prefs.filtersInitialized=saved.filtersInitialized;prefs.excludedLectures=saved.excludedLectures;prefs.excludedCats=saved.excludedCats;selectedLectures=new Set();selectedCats=new Set();course=next;prefs.course=next;savePrefs();applyCourse()}
-document.querySelectorAll(".course-tab").forEach(b=>b.onclick=()=>switchCourse(b.dataset.course));
-async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="Exam 4 questions are coming soon.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}bank.molec=validate(data);notices.molec=message;
- for(const key of Object.keys(COURSES).filter(k=>COURSES[k].csv)){const c=COURSES[key];let rows=[],msg=c.label+" question bank loaded.";try{const res=await fetch(c.csv,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);rows=parseCSV(await res.text())}catch(e){msg="Could not load the "+c.label+" question bank ("+e.message+")."}bank[key]=validate(rows);notices[key]=msg}
+// Exam 5 only: the HSS, PCS and OPP banks were removed on 2026-11-23
+const COURSES={molec:{title:"Molec Exam 5 Questions"}};
+let course="molec";const bank={molec:[]},notices={molec:"Loading questions…"};
+function applyCourse(){questions=bank[course];document.title=COURSES[course].title;$("site-title").textContent=COURSES[course].title;$("notice").textContent=notices[course];setupFilters();updateStats()}
+async function load(){const url=sourceUrl();$("sheeturl").value=url;let data=[],message="Exam 5 questions are coming soon.";if(url){try{const u=new URL(url);if(u.protocol!=="https:")throw Error("Source must use HTTPS");const res=await fetch(url,{cache:"no-store"});if(!res.ok)throw Error("HTTP "+res.status);const parsed=parseCSV(await res.text());if(!parsed.length)throw Error("Sheet contains no questions");data=parsed;message="Live question bank loaded from Google Sheets."}catch(e){message="Could not load the published Sheet ("+e.message+"). No questions will be shown until the connection works."}}bank.molec=validate(data);notices.molec=message;
  applyCourse()}
-const LECTURE_ORDER=["Introduction to EBM","Introduction to Research","Biostatistics I","Biostatistics II","Quintuple Aim","Healthcare System Structure & Process","Head & Neck Exam","EENT Exam","Abdominal Exam","Heart & Lung Exam","Innominate & Pelvis","Lumbar Spine","Osteopathic Concepts & Techniques","Urea Cycle ILA","Inborn Errors of Metabolism ILA","Phospholipid & Glycolipid Synthesis ILA","Synthesis of Fatty Acids","Cholesterol Metabolism","Heme Synthesis and Degradation","Basic Principles of Antimicrobial Therapy","Extracellular Matrix ILA","Developmental Genetics ILA","Inflammation ILA"]; // HSS order; add Exam 4 Molec lecture names here as they are published
+const LECTURE_ORDER=["Basic Principles of Antimicrobial Therapy","Extracellular Matrix ILA","Developmental Genetics ILA","Inflammation ILA"]; // Exam 5 lecture order; add new Molec lecture names here as they are published
 const CATEGORY_ORDER=["PIAT Questions","Content Questions (AI)","Intro Questions (AI)","Exam Style Questions (AI)","USMLE Style (AI)","Bits Questions","Faculty Questions","Intro Questions","USMLE AI Questions"];
 const lectureSort=(a,b)=>{const ia=LECTURE_ORDER.indexOf(a),ib=LECTURE_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
 const categorySort=(a,b)=>{const ia=CATEGORY_ORDER.indexOf(a),ib=CATEGORY_ORDER.indexOf(b);return ia===-1&&ib===-1?a.localeCompare(b):ia===-1?1:ib===-1?-1:ia-ib};
@@ -448,7 +446,7 @@ function buildHome(){
  }
  const wrap=$("home-lectures");wrap.replaceChildren();
  const names=[...new Set(questions.filter(q=>q.lecture!=="Killebrew Questions").map(q=>q.lecture))].sort(lectureSort);
- if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent=COURSES[course].csv?"No "+COURSES[course].label+" questions available.":sourceUrl()?"No questions available. Check the Google Sheet connection.":"No Exam 4 questions yet — check back soon.";wrap.append(p);return}
+ if(!names.length){const p=document.createElement("p");p.className="muted";p.textContent=sourceUrl()?"No questions available. Check the Google Sheet connection.":"No Exam 5 questions yet — check back soon.";wrap.append(p);return}
  for(const name of names){
   const all=questions.filter(q=>q.lecture===name),card=document.createElement("article");card.className="lecture-card";
   const head=document.createElement("div");head.className="lecture-head";
@@ -804,8 +802,8 @@ $("retry").onclick=()=>{
 $("bookmark").onclick=()=>{const q=session[idx],rec=progress[q.id]||{attempts:[],bookmark:false};rec.bookmark=!rec.bookmark;progress[q.id]=rec;save(q.id);render()};
 $("export").onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,exported:new Date().toISOString(),progress},null,2)],{type:"application/json"}),link=document.createElement("a"),url=URL.createObjectURL(blob);link.href=url;link.download="molec-exam3-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};
 $("import").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!data.progress||typeof data.progress!=="object"||Array.isArray(data.progress))throw Error("Invalid backup");if(!confirm("Import this backup? Existing progress for matching questions will be replaced."))return;progress={...progress,...data.progress};save();updateStats();updateMatch();alert("Progress imported")}catch(err){alert("Could not import: "+err.message)}e.target.value=""};
-$("saveurl").onclick=()=>{const val=$("sheeturl").value.trim();if(val){try{const u=new URL(val);if(u.protocol!=="https:")throw Error()}catch{alert("Enter a valid HTTPS CSV URL");return}}localStorage.setItem("molec-exam4-csv-url",val);load()};
-$("clearurl").onclick=()=>{localStorage.removeItem("molec-exam4-csv-url");load()};
+$("saveurl").onclick=()=>{const val=$("sheeturl").value.trim();if(val){try{const u=new URL(val);if(u.protocol!=="https:")throw Error()}catch{alert("Enter a valid HTTPS CSV URL");return}}localStorage.setItem("molec-exam5-csv-url",val);load()};
+$("clearurl").onclick=()=>{localStorage.removeItem("molec-exam5-csv-url");load()};
 $("refresh").onclick=load;
 load();
 </script>
